@@ -1,0 +1,21 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bravo – Saborear cada momento.</title><meta name="description" content="Peça pastel, açaí e Coca-Cola na Bravo.">
+<meta property="og:title" content="Bravo – Loja online"><meta property="og:image" content="img/logo.jpg"><link rel="icon" href="img/logo.jpg">
+<link rel="stylesheet" href="style.css"></head><body>
+<header><img src="img/logo.jpg" alt="Bravo" class="logo"><button id="cartBtn" aria-label="Carrinho">🛒 <span id="count">0</span></button></header>
+<section class="hero"><h1>BRAVO</h1><p>Saborear cada momento.</p></section>
+<nav class="tabs"><button data-cat="all" class="on">Tudo</button><button data-cat="Pastéis">Pastéis</button><button data-cat="Açaí">Açaí</button><button data-cat="Bebidas">Bebidas</button></nav>
+<main id="grid"></main>
+<footer>© Bravo · Saborear cada momento.</footer>
+<div id="overlay" hidden></div>
+<aside id="drawer" aria-hidden="true"><div class="dh"><h2>Seu carrinho</h2><button id="closeCart">✕</button></div>
+<div id="items"></div><div class="tot">Total: <b id="total">R$ 0,00</b></div>
+<form id="checkout"><h3>Finalizar pedido</h3>
+<input name="nome" placeholder="Nome" required><input name="tel" type="tel" placeholder="Telefone / WhatsApp" required>
+<label class="r"><input type="radio" name="tipo" value="Entrega" checked> Entrega</label><label class="r"><input type="radio" name="tipo" value="Retirada"> Retirada no local</label>
+<input name="end" id="end" placeholder="Endereço completo" required>
+<select name="pag"><option>Pix</option><option>Cartão</option><option>Dinheiro na entrega</option></select>
+<textarea name="obs" placeholder="Observações (ex.: troco para R$ 50, sem cebola)"></textarea>
+<button type="submit" class="go">Finalizar pedido</button></form>
+<div id="summary" hidden><p>Copie o pedido abaixo e envie para a Bravo:</p><textarea id="sumText" readonly></textarea><button id="copy" class="go">Copiar pedido</button></div>
+</aside><div id="toast"></div><script src="app.js"></script></body></html>
