@@ -1,0 +1,28 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Painel – Bravo</title><meta name="robots" content="noindex,nofollow"><link rel="icon" href="img/logo.jpg"><link rel="stylesheet" href="style.css">
+<style>.wrap{max-width:900px;margin:auto;padding:14px;display:flex;flex-direction:column;gap:12px}.o{background:#161616;border:1px solid #262626;border-radius:14px;padding:12px}
+.o h3{margin:0 0 4px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.st{color:#f5b400}.paid{color:#3c3}.pend{color:#e88}.btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.btns button{background:#222;color:#fff;border:1px solid #444;border-radius:20px;padding:8px 12px}.btns button.on{background:#f5b400;color:#000}.wa{display:inline-block;margin-top:8px;background:#25d366;color:#000;border-radius:12px;padding:10px 14px;font-weight:800;text-decoration:none}
+#filters{display:flex;gap:6px;flex-wrap:wrap}</style></head><body>
+<header><img src="img/logo.jpg" alt="Bravo" class="logo"><b>Painel de pedidos</b></header>
+<div class="wrap"><form id="login" class="view"><input type="password" id="pw" placeholder="Senha do painel" autocomplete="current-password"><button class="go">Entrar</button></form>
+<div id="panel" hidden><div id="filters"><label><input type="checkbox" id="hideDone" checked> Ocultar entregues/cancelados</label> <button id="reload" class="ghost" style="padding:6px 12px">Atualizar</button> <span id="upd" style="color:#777"></span></div><div id="list"></div></div></div>
+<script src="products.js"></script><script src="app-config.js"></script><script>
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pw=sessionStorage.getItem("bravoAdm")||"",orders=[],lastWa={};
+async function call(body){const r=await fetch(API+"/api/admin",{method:"POST",headers:{"Content-Type":"application/json","X-Admin-Password":pw},body:JSON.stringify(body)});const d=await r.json();if(r.status==401){sessionStorage.removeItem("bravoAdm");$("#panel").hidden=true;$("#login").hidden=false;throw new Error("Senha incorreta")}if(!r.ok)throw new Error(d.error);return d}
+const phone=t=>{let d=String(t).replace(/\D/g,"");if(d.length<=11)d="55"+d;return d};
+const msgs={"Aceito":"seu pedido foi aceito e já vai para a cozinha!","Em produção":"seu pedido está sendo preparado agora! 🔥","Saiu para entrega":"seu pedido saiu para entrega! 🛵","Pronto para retirada":"seu pedido está pronto para retirada! 🎉","Entregue":"pedido entregue. Obrigado e bom apetite! 😋","Cancelado":"infelizmente seu pedido foi cancelado. Fale com a gente se tiver dúvidas.","Recebido":"recebemos seu pedido!"};
+function waLink(o){const txt=`Olá, ${o.cliente.nome}! Aqui é da Bravo 👑\nPedido nº ${o.id}: ${msgs[o.status]}\n\nResumo:\n`+orderText(o,"").split("\n\nNome:")[0]+`\n\nAcompanhe: ${SITE_URL}pedido.html?id=${o.id}`;return `https://wa.me/${phone(o.cliente.tel)}?text=${encodeURIComponent(txt)}`}
+function render(){const hide=$("#hideDone").checked;$("#list").innerHTML=orders.filter(o=>!hide||!["Entregue","Cancelado"].includes(o.status)).map(o=>{const c=o.cliente,dt=new Date(o.criadoEm).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"});
+return `<div class="o"><h3><span>nº ${esc(o.id)}</span><span class="st">${esc(o.status)}</span></h3><small>${dt}</small> · ${o.pagamento=="Pix"?(o.pago?'<b class="paid">PIX PAGO</b>':'<b class="pend">Pix pendente</b>'):esc(o.pagamento)}
+<div class="cust"><b>${esc(c.nome)}</b> · <a style="color:#f5b400" href="tel:${esc(c.tel)}">${esc(c.tel)}</a><br>${c.tipo=="Retirada"?"Retirada no local":"Entrega: "+esc(c.end)}${c.obs?"<br>Obs.: "+esc(c.obs):""}</div>
+<table class="bd">${o.itens.map(i=>`<tr><td>${i.qty}x ${esc(i.name)} <small>(${brlFmt(i.unit)})</small></td><td class="n">${brlFmt(i.subtotal)}</td></tr>`).join("")}<tr class="s"><td>Subtotal</td><td class="n">${brlFmt(o.subtotal)}</td></tr><tr class="s"><td>Taxa de entrega</td><td class="n">${feeLabel(o.taxaEntrega)}</td></tr><tr class="t"><td>Total</td><td class="n">${brlFmt(o.total)}${o.taxaEntrega==null?" + entrega":""}</td></tr></table>
+<div class="btns">${ORDER_STATUSES.filter(s=>!(c.tipo=="Retirada"&&s=="Saiu para entrega")&&!(c.tipo!="Retirada"&&s=="Pronto para retirada")).map(s=>`<button data-id="${o.id}" data-s="${s}" class="${s==o.status?"on":""}">${s}</button>`).join("")}</div>
+<a class="wa" target="_blank" href="${waLink(o)}">${lastWa[o.id]?"📲 Avisar no WhatsApp: "+esc(o.status):"📲 Avisar cliente no WhatsApp"}</a></div>`}).join("")||"<p>Nenhum pedido.</p>"}
+async function load(){try{const d=await call({action:"list"});orders=d.orders;render();$("#upd").textContent="Atualizado "+new Date().toLocaleTimeString("pt-BR")}catch(e){alert(e.message)}}
+$("#login").onsubmit=async e=>{e.preventDefault();pw=$("#pw").value;try{await call({action:"list"});sessionStorage.setItem("bravoAdm",pw);start()}catch(e){alert(e.message)}};
+function start(){$("#login").hidden=true;$("#panel").hidden=false;load();setInterval(load,30000)}
+$("#list").onclick=async e=>{const b=e.target.closest("button[data-s]");if(!b)return;try{const o=await call({action:"setStatus",id:b.dataset.id,status:b.dataset.s});orders=orders.map(x=>x.id==o.id?o:x);lastWa[o.id]=1;render()}catch(e){alert(e.message)}};
+$("#hideDone").onchange=render;$("#reload").onclick=load;if(pw)start();
+</script></body></html>

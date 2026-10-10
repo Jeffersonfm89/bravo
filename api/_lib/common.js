@@ -1,4 +1,3 @@
-const { PRODUCTS } = require('../../products.js');
 const ALLOWED = ['https://jeffersonfm89.github.io', process.env.SITE_ORIGIN].filter(Boolean);
 function cors(req, res) {
   const o = req.headers.origin || '';
@@ -6,7 +5,7 @@ function cors(req, res) {
     res.setHeader('Access-Control-Allow-Origin', o); res.setHeader('Vary', 'Origin');
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Password');
   if (req.method === 'OPTIONS') { res.status(204).end(); return true; }
   return false;
 }
@@ -17,16 +16,8 @@ async function mp(path, opts = {}) {
   if (!r.ok) throw Object.assign(new Error(data.message || 'Erro Mercado Pago'), { status: 502, mp: data });
   return data;
 }
-function priceCart(items) {
-  if (!Array.isArray(items) || !items.length || items.length > 50) throw Object.assign(new Error('Carrinho inválido'), { status: 400 });
-  let total = 0; const lines = [];
-  for (const it of items) {
-    const p = PRODUCTS.find(x => x.id === it.id); const q = Math.floor(Number(it.qty));
-    if (!p || !(q >= 1 && q <= 99)) throw Object.assign(new Error('Item inválido: ' + it.id), { status: 400 });
-    total += p.price * q; lines.push({ id: p.id, name: p.name, qty: q, unit: p.price });
-  }
-  return { total: Math.round(total * 100) / 100, lines };
-}
 const body = req => typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
 const fail = (res, e) => { console.error(e.message, e.mp || ''); res.status(e.status || 500).json({ error: e.message }); };
-module.exports = { cors, mp, priceCart, body, fail };
+const bad = m => Object.assign(new Error(m), { status: 400 });
+const clean = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
+module.exports = { cors, mp, body, fail, bad, clean };

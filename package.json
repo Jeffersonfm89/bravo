@@ -1,1 +1,1 @@
-{ "name": "bravo-loja", "private": true, "engines": { "node": ">=18" } }
+{"name":"bravo-loja","private":true,"engines":{"node":">=18"},"dependencies":{"@vercel/blob":"^2.8.1"}}

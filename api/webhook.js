@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const { mp, body, fail } = require('./_lib/common');
+const { getOrder, saveOrder } = require('./_lib/store');
 // Valida a assinatura x-signature se MP_WEBHOOK_SECRET estiver configurado (Mercado Pago > Webhooks > assinatura secreta).
 function validSig(req, dataId) {
   const secret = process.env.MP_WEBHOOK_SECRET; if (!secret) return true;
@@ -20,8 +21,12 @@ module.exports = async (req, res) => {
     if (!validSig(req, id)) return res.status(401).json({ error: 'assinatura inválida' });
     const p = await mp('/v1/payments/' + id);   // nunca confia no corpo: consulta o MP
     if (p.status === 'approved') {
-      // "Marca como pago": sem banco de dados, o registro fica no log da Vercel.
-      console.log('PEDIDO PAGO', JSON.stringify({ id: p.id, valor: p.transaction_amount, metadata: p.metadata }));
+      const o = p.external_reference && await getOrder(p.external_reference);
+      if (o && !o.pago && Math.abs(Number(p.transaction_amount) - o.total) < 0.01) {
+        o.pago = true; o.pixStatus = 'approved'; o.pagoEm = new Date().toISOString(); o.historico.push({ em: o.pagoEm, status: 'Pago (Pix)' });
+        await saveOrder(o);
+      }
+      console.log('PEDIDO PAGO', p.external_reference, p.id, p.transaction_amount);
     }
     res.status(200).json({ id: p.id, status: p.status });
   } catch (e) { fail(res, e); }

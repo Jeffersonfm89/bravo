@@ -8,15 +8,19 @@
 <main id="grid"></main>
 <footer>© Bravo · Saborear cada momento.</footer>
 <div id="overlay" hidden></div>
-<aside id="drawer" aria-hidden="true"><div class="dh"><h2>Seu carrinho</h2><button id="closeCart">✕</button></div>
-<div id="items"></div><div class="tot">Total: <b id="total">R$ 0,00</b></div>
-<form id="checkout"><h3>Finalizar pedido</h3>
+<aside id="drawer" aria-hidden="true"><div class="dh"><h2 id="dTitle">Seu carrinho</h2><button id="closeCart">✕</button></div>
+<section id="vCart" class="view"><div id="items"></div><div class="tot">Subtotal: <b id="total">R$ 0,00</b></div>
+<form id="checkout"><h3>Seus dados</h3>
 <input name="nome" placeholder="Nome" required><input name="tel" type="tel" placeholder="Telefone / WhatsApp" required><input name="email" type="email" placeholder="E-mail (opcional, para o comprovante Pix)">
 <label class="r"><input type="radio" name="tipo" value="Entrega" checked> Entrega</label><label class="r"><input type="radio" name="tipo" value="Retirada"> Retirada no local</label>
 <input name="end" id="end" placeholder="Endereço completo" required>
 <select name="pag"><option>Pix</option><option>Cartão</option><option>Dinheiro na entrega</option></select>
 <textarea name="obs" placeholder="Observações (ex.: troco para R$ 50, sem cebola)"></textarea>
-<button type="submit" class="go">Finalizar pedido</button></form>
-<div id="summary" hidden><p>Copie o pedido abaixo e envie para a Bravo:</p><textarea id="sumText" readonly></textarea><button id="copy" class="go">Copiar pedido</button></div>
-<div id="pix" hidden><h3>Pague com Pix</h3><p>Valor: <b id="pixAmount"></b></p><img id="pixQr" alt="QR Code Pix"><p>Pix copia e cola:</p><textarea id="pixCode" readonly></textarea><button id="pixCopy" class="go" type="button">Copiar código Pix</button><p id="pixStatus">Aguardando pagamento…</p></div>
-</aside><div id="toast"></div><script src="products.js"></script><script src="app.js"></script></body></html>
+<button type="submit" class="go">Revisar pedido</button></form></section>
+<section id="vReview" class="view" hidden><h3>Confira seu pedido</h3><div id="reviewBox"></div>
+<button id="confirm" class="go">Confirmar pedido</button><button id="back" class="ghost">Voltar e corrigir</button></section>
+<section id="vPix" class="view" hidden><h3>Pague com Pix</h3><p>Pedido nº <b class="oid"></b> · Valor: <b id="pixAmount"></b></p><img id="pixQr" alt="QR Code Pix"><p>Pix copia e cola:</p><textarea id="pixCode" readonly></textarea><button id="pixCopy" class="go" type="button">Copiar código Pix</button><p id="pixStatus">Aguardando pagamento…</p><a class="ghost trackLink" target="_blank">Acompanhar pedido</a></section>
+<section id="vDone" class="view" hidden><h3 id="doneTitle">✅ Pedido recebido!</h3><p>Pedido nº <b class="oid"></b></p><p>Toque abaixo para enviar o pedido à Bravo pelo WhatsApp:</p>
+<button id="sendWa" class="go">Enviar pedido no WhatsApp</button><a class="ghost trackLink">Acompanhar pedido</a>
+<details><summary>Ver / copiar texto do pedido</summary><textarea id="sumText" readonly></textarea><button id="copy" class="ghost">Copiar pedido</button></details></section>
+</aside><div id="toast"></div><script src="products.js"></script><script src="app-config.js"></script><script src="app.js"></script></body></html>
