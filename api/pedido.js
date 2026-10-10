@@ -34,7 +34,7 @@ module.exports = async (req, res) => {
     if (pagamento === 'Pix') {
       const host = process.env.PUBLIC_API_URL || ('https://' + req.headers.host);
       const email = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cliente.email) ? cliente.email : (process.env.PAYER_FALLBACK_EMAIL || 'cliente@bravo.com.br');
-      const pay = await mp('/v1/payments', {
+      let pay; try { pay = await mp('/v1/payments', {
         method: 'POST', headers: { 'X-Idempotency-Key': o.id },
         body: JSON.stringify({
           transaction_amount: o.total, payment_method_id: 'pix', external_reference: o.id,
@@ -42,9 +42,9 @@ module.exports = async (req, res) => {
           notification_url: host + '/api/webhook',
           date_of_expiration: new Date(Date.now() + 30 * 60e3).toISOString().replace('Z', '-00:00'),
         }),
-      });
-      const t = pay.point_of_interaction?.transaction_data || {};
-      o.pixId = String(pay.id); o.pixStatus = pay.status; o.pixQr = { qr_code: t.qr_code, qr_code_base64: t.qr_code_base64 };
+      }); } catch (e) { console.error('Pix MP falhou', e.message, e.mp || ''); o.pixErro = true; o.pagamento = 'Pix (combinar com a loja)'; }
+      if (pay) { const t = pay.point_of_interaction?.transaction_data || {};
+      o.pixId = String(pay.id); o.pixStatus = pay.status; o.pixQr = { qr_code: t.qr_code, qr_code_base64: t.qr_code_base64 }; }
     }
     await saveOrder(o);
     res.status(201).json({ ...publicView(o), pix: o.pixQr });

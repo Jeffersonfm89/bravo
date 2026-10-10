@@ -38,6 +38,7 @@ btn.disabled=true;btn.textContent="Enviando…";
 try{const r=await fetch(api+"/api/pedido",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:draft.itens.map(i=>({id:i.id,qty:i.qty})),cliente:draft.cliente,pagamento:draft.pagamento})});
 const o=await r.json();if(!r.ok)throw new Error(o.error||"Falha ao enviar pedido");
 cart={};save();document.querySelectorAll(".oid").forEach(x=>x.textContent=o.id);document.querySelectorAll(".trackLink").forEach(a=>a.href=trackURL(o.id));
+if(o.pixErro)toast("Pix automático indisponível: combine o Pix pelo WhatsApp");
 if(o.pagamento=="Pix"&&o.pix){view("vPix");$("#pixAmount").textContent=brlFmt(o.total);$("#pixQr").src="data:image/png;base64,"+o.pix.qr_code_base64;$("#pixCode").value=o.pix.qr_code;$("#pixStatus").textContent="Aguardando pagamento…";$("#pixStatus").classList.remove("ok");
 clearInterval(poll);poll=setInterval(async()=>{try{const s=await(await fetch(api+"/api/pedido?id="+o.id)).json();
 if(s.pago){clearInterval(poll);$("#pixStatus").textContent="✅ Pagamento confirmado!";$("#pixStatus").classList.add("ok");setTimeout(()=>showDone(s,true),1200)}
