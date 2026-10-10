@@ -11,11 +11,12 @@
 <aside id="drawer" aria-hidden="true"><div class="dh"><h2>Seu carrinho</h2><button id="closeCart">✕</button></div>
 <div id="items"></div><div class="tot">Total: <b id="total">R$ 0,00</b></div>
 <form id="checkout"><h3>Finalizar pedido</h3>
-<input name="nome" placeholder="Nome" required><input name="tel" type="tel" placeholder="Telefone / WhatsApp" required>
+<input name="nome" placeholder="Nome" required><input name="tel" type="tel" placeholder="Telefone / WhatsApp" required><input name="email" type="email" placeholder="E-mail (opcional, para o comprovante Pix)">
 <label class="r"><input type="radio" name="tipo" value="Entrega" checked> Entrega</label><label class="r"><input type="radio" name="tipo" value="Retirada"> Retirada no local</label>
 <input name="end" id="end" placeholder="Endereço completo" required>
 <select name="pag"><option>Pix</option><option>Cartão</option><option>Dinheiro na entrega</option></select>
 <textarea name="obs" placeholder="Observações (ex.: troco para R$ 50, sem cebola)"></textarea>
 <button type="submit" class="go">Finalizar pedido</button></form>
 <div id="summary" hidden><p>Copie o pedido abaixo e envie para a Bravo:</p><textarea id="sumText" readonly></textarea><button id="copy" class="go">Copiar pedido</button></div>
-</aside><div id="toast"></div><script src="app.js"></script></body></html>
+<div id="pix" hidden><h3>Pague com Pix</h3><p>Valor: <b id="pixAmount"></b></p><img id="pixQr" alt="QR Code Pix"><p>Pix copia e cola:</p><textarea id="pixCode" readonly></textarea><button id="pixCopy" class="go" type="button">Copiar código Pix</button><p id="pixStatus">Aguardando pagamento…</p></div>
+</aside><div id="toast"></div><script src="products.js"></script><script src="app.js"></script></body></html>

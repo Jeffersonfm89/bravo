@@ -18,3 +18,5 @@ footer{text-align:center;color:#777;padding:20px;font-size:13px}
 input,select,textarea{background:#1c1c1c;color:#fff;border:1px solid #333;border-radius:10px;padding:11px;font-size:16px}textarea{min-height:70px}#sumText{min-height:220px}
 .r{font-size:15px}.go{background:#f5b400;color:#000;border:0;border-radius:12px;padding:14px;font-weight:800;font-size:16px}
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#f5b400;color:#000;padding:10px 18px;border-radius:20px;font-weight:700;opacity:0;transition:.3s;z-index:20}#toast.s{opacity:1}
+
+#pix{display:flex;flex-direction:column;gap:8px}#pix[hidden]{display:none}#pixQr{width:240px;max-width:100%;align-self:center;background:#fff;border-radius:10px;padding:8px}#pixStatus{font-weight:700;color:#f5b400;text-align:center}#pixStatus.ok{color:#3c3;font-size:20px}
