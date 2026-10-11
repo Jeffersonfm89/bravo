@@ -7,10 +7,10 @@ const $=s=>document.querySelector(s),brl=v=>v.toLocaleString("pt-BR",{style:"cur
 localStorage.removeItem("bravoCart");
 let cart=JSON.parse(localStorage.getItem("bravoCart2")||"{}");let cat="all";
 // limpa itens que não existem mais no cardápio
-for(const k in cart){try{priceItem(PRODUCTS.find(p=>p.id==cart[k].id),cart[k].opts)}catch(e){delete cart[k]}}
+for(const k in cart){try{const p=PRODUCTS.find(p=>p.id==cart[k].id);if(p.ativo===false)throw 0;priceItem(p,cart[k].opts)}catch(e){delete cart[k]}}
 const save=()=>{localStorage.setItem("bravoCart2",JSON.stringify(cart));render()};
 const fromPrice=p=>p.price+(p.options||[]).reduce((s,g)=>s+(g.min?g.choices.map(c=>c.price).sort((a,b)=>a-b).slice(0,g.min).reduce((a,b)=>a+b,0):0),0);
-function grid(){$("#grid").innerHTML=PRODUCTS.filter(p=>cat=="all"||p.cat==cat).map(p=>`<div class="card"><img src="${p.img}" alt="${p.name}" loading="lazy"><div class="b"><h3>${p.name}</h3><small>${p.desc}</small><div class="p">${p.options?"a partir de ":""}${brl(fromPrice(p))}</div><button class="add" data-id="${p.id}">${p.options?"Escolher":"Adicionar"}</button></div></div>`).join("")}
+function grid(){$("#grid").innerHTML=PRODUCTS.filter(p=>p.ativo!==false&&(cat=="all"||p.cat==cat)).map(p=>`<div class="card"><img src="${p.img}" alt="${p.name}" loading="lazy"><div class="b"><h3>${p.name}</h3><small>${p.desc}</small><div class="p">${p.options?"a partir de ":""}${brl(fromPrice(p))}</div><button class="add" data-id="${p.id}">${p.options?"Escolher":"Adicionar"}</button></div></div>`).join("")}
 function lines(){return Object.entries(cart).map(([k,c])=>{const p=PRODUCTS.find(x=>x.id==c.id),pr=priceItem(p,c.opts);return{k,p,qty:c.qty,...pr}})}
 function total(){return lines().reduce((s,l)=>s+l.unit*l.qty,0)}
 function addToCart(id,opts){const pr=priceItem(PRODUCTS.find(p=>p.id==id),opts),k=id+"|"+JSON.stringify(pr.opts);cart[k]=cart[k]||{id,opts:pr.opts,qty:0};cart[k].qty++;save();toast("Adicionado ao carrinho!")}

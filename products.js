@@ -23,12 +23,14 @@ var PRODUCTS = [
       { id: "mussarela", name: "Queijo mussarela", price: 2.00 }, { id: "presunto", name: "Presunto", price: 2.00 }, { id: "calabresa", name: "Calabresa", price: 2.00 },
       { id: "bacon", name: "Bacon", price: 2.50 }, { id: "catupiry", name: "Catupiry", price: 2.00 }, { id: "requeijao", name: "Requeijão", price: 2.00 },
       { id: "tomate", name: "Tomate", price: 1.00 }, { id: "oregano", name: "Orégano", price: 0.50 }, { id: "milho", name: "Milho", price: 1.00 } ] }] }, // preços por ingrediente PROVISÓRIOS
-  { id: "a-copo", cat: "Açaí", name: "Açaí no Copo", desc: "Escolha o tamanho e os adicionais", price: 0, img: "img/acai.jpg",
+  { id: "a-copo", ativo: false, cat: "Açaí", name: "Açaí no Copo", // DESATIVADO (ativo: false) — para reativar, apague "ativo: false"
+    desc: "Escolha o tamanho e os adicionais", price: 0, img: "img/acai.jpg",
     options: [
       { id: "tam", label: "Tamanho", type: "single", min: 1, max: 1, choices: [
         { id: "300", name: "300ml", price: 12.00 }, { id: "400", name: "400ml", price: 15.00 }, { id: "500", name: "500ml", price: 18.00 } ] },
       { id: "add", label: "Adicionais", type: "multi", min: 0, max: 4, choices: [
         { id: "pacoca", name: "Paçoca", price: 3.00 }, { id: "mm", name: "M&M", price: 5.00 }, { id: "ninho", name: "Ninho", price: 3.00 }, { id: "banana", name: "Banana", price: 3.00 } ] } ] },
+  { id: "a-garrafa", cat: "Açaí", name: "Açaí na Garrafa", desc: "Contém leite em pó e leite condensado.", price: 15.00, img: "img/acai-garrafa.jpg" }, // PROVISÓRIO
   { id: "b-coca-lata", cat: "Bebidas", name: "Coca-Cola Lata 350ml", desc: "Gelada", price: 6.00, img: "img/coca.jpg" },
   { id: "b-coca-600", cat: "Bebidas", name: "Coca-Cola 600ml", desc: "Gelada", price: 10.00, img: "img/coca.jpg" },
   { id: "b-coca-2l", cat: "Bebidas", name: "Coca-Cola 2L", desc: "Gelada", price: 16.00, img: "img/coca.jpg" },
@@ -62,6 +64,7 @@ function buildBreakdown(cartPairs, tipo, fee) {
   cartPairs.forEach(function (c) {
     var p = PRODUCTS.find(function (x) { return x.id === c.id; }); var q = Math.floor(Number(c.qty));
     if (!p || !(q >= 1 && q <= 99)) throw new Error('Item inválido: ' + c.id);
+    if (p.ativo === false) throw new Error(p.name + ' está indisponível no momento');
     var pr = priceItem(p, c.opts);
     var s = Math.round(pr.unit * q * 100) / 100; subtotal += s;
     itens.push({ id: p.id, name: p.name, detalhe: pr.detalhe, opts: pr.opts, qty: q, unit: pr.unit, subtotal: s });
