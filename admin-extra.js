@@ -21,7 +21,7 @@
   q("#btnTestAlert").onclick = function () { unlockAudio(); startAlarm("TESTE DE ALERTA"); };
   // ---------- notificações + service worker
   var swReg = null;
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js?v=20261011160005").then(function (r) { swReg = r; }).catch(function () {});
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js?v=20261011160047").then(function (r) { swReg = r; }).catch(function () {});
   function notify(title, body) {
     if (!("Notification" in window) || Notification.permission !== "granted") return;
     var opt = { body: body, icon: "img/logo.jpg", badge: "img/logo.jpg", tag: "bravo-pedido", renotify: true, requireInteraction: true, vibrate: [400, 150, 400] };
