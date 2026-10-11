@@ -1,1 +1,3 @@
-{ "functions": { "api/**/*.js": { "maxDuration": 10 } } }
+{ "functions": { "api/**/*.js": { "maxDuration": 10 } },
+  "headers": [ { "source": "/(.*)\\.(html|js|css)", "headers": [ { "key": "Cache-Control", "value": "no-cache" } ] },
+               { "source": "/", "headers": [ { "key": "Cache-Control", "value": "no-cache" } ] } ] }

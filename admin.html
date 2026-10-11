@@ -6,7 +6,7 @@
 #filters{display:flex;gap:6px;flex-wrap:wrap}section[hidden]{display:none}.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:10px 0}
 .kpi{background:#161616;border:1px solid #262626;border-radius:12px;padding:10px}.kpi small{color:#aaa;display:block}.kpi b{font-size:19px;color:#f5b400}.bd input{padding:6px;width:90px}.est{color:#aaa;font-size:12px}h4{color:#f5b400;margin:14px 0 4px}</style></head><body>
 <header><img src="img/logo.jpg" alt="Bravo" class="logo"><b>Painel de pedidos</b></header>
-<div class="wrap"><form id="login" class="view"><input type="password" id="pw" placeholder="Senha do painel" autocomplete="current-password"><button class="go">Entrar</button></form>
+<div class="wrap"><form id="login" class="view"><input type="password" id="pw" placeholder="Senha do painel" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false"><label class="r"><input type="checkbox" id="showPw"> Mostrar senha</label><p id="loginErr" style="color:#f66;font-weight:700;margin:0"></p><button class="go">Entrar</button></form>
 <div id="panel" hidden><nav class="tabs" id="atabs"><button data-t="tPedidos" class="on">Pedidos</button><button data-t="tTaxas">Taxas de entrega</button><button data-t="tMet">Métricas</button><button data-t="tCli">Clientes</button></nav>
 <section id="tPedidos"><div id="filters"><label><input type="checkbox" id="hideDone" checked> Ocultar entregues/cancelados</label> <button id="reload" class="ghost" style="padding:6px 12px">Atualizar</button> <span id="upd" style="color:#777"></span></div><div id="list"></div></section>
 <section id="tTaxas" hidden><p class="cust">Bairros sem taxa aparecem para o cliente como "taxa a combinar". Para desativar um bairro, desmarque "Atende (desmarque para desativar)" — a taxa fica salva. Bairros não podem ser excluídos.</p>
@@ -19,7 +19,7 @@
 <script src="products.js"></script><script src="bairros.js"></script><script src="app-config.js"></script><script>
 const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let pw=sessionStorage.getItem("bravoAdm")||"",orders=[],lastWa={};
-async function call(body){const r=await fetch(API+"/api/admin",{method:"POST",headers:{"Content-Type":"application/json","X-Admin-Password":pw},body:JSON.stringify(body)});const d=await r.json();if(r.status==401){sessionStorage.removeItem("bravoAdm");$("#panel").hidden=true;$("#login").hidden=false;throw new Error("Senha incorreta")}if(!r.ok)throw new Error(d.error);return d}
+async function call(body){const r=await fetch(API+"/api/admin",{method:"POST",headers:{"Content-Type":"application/json","X-Admin-Password":pw},body:JSON.stringify(body)});const d=await r.json();if(r.status==401){sessionStorage.removeItem("bravoAdm");$("#panel").hidden=true;$("#login").hidden=false;throw new Error("Senha incorreta")}if(!r.ok)throw new Error("Erro ao carregar: "+(d.error||r.status));return d}
 const phone=t=>{let d=String(t).replace(/\D/g,"");if(d.length<=11)d="55"+d;return d};
 const msgs={"Aceito":"seu pedido foi aceito e já vai para a cozinha!","Em produção":"seu pedido está sendo preparado agora! 🔥","Saiu para entrega":"seu pedido saiu para entrega! 🛵","Pronto para retirada":"seu pedido está pronto para retirada! 🎉","Entregue":"pedido entregue. Obrigado e bom apetite! 😋","Cancelado":"infelizmente seu pedido foi cancelado. Fale com a gente se tiver dúvidas.","Recebido":"recebemos seu pedido!"};
 function waLink(o){const txt=`Olá, ${o.cliente.nome}! Aqui é da Bravo 👑\nPedido nº ${o.id}: ${msgs[o.status]}\n\nResumo:\n`+orderText(o,"").split("\n\nNome:")[0]+`\n\nAcompanhe: ${SITE_URL}pedido.html?id=${o.id}`;return `https://wa.me/${phone(o.cliente.tel)}?text=${encodeURIComponent(txt)}`}
@@ -30,7 +30,8 @@ return `<div class="o"><h3><span>nº ${esc(o.id)}</span><span class="st">${esc(o
 <div class="btns">${ORDER_STATUSES.filter(s=>!(c.tipo=="Retirada"&&s=="Saiu para entrega")&&!(c.tipo!="Retirada"&&s=="Pronto para retirada")).map(s=>`<button data-id="${o.id}" data-s="${s}" class="${s==o.status?"on":""}">${s}</button>`).join("")}</div>
 <a class="wa" target="_blank" href="${waLink(o)}">${lastWa[o.id]?"📲 Avisar no WhatsApp: "+esc(o.status):"📲 Avisar cliente no WhatsApp"}</a></div>`}).join("")||"<p>Nenhum pedido.</p>"}
 async function load(){try{const d=await call({action:"list"});orders=d.orders;render();$("#upd").textContent="Atualizado "+new Date().toLocaleTimeString("pt-BR")}catch(e){alert(e.message)}}
-$("#login").onsubmit=async e=>{e.preventDefault();pw=$("#pw").value;try{await call({action:"list"});sessionStorage.setItem("bravoAdm",pw);start()}catch(e){alert(e.message)}};
+$("#showPw").onchange=e=>$("#pw").type=e.target.checked?"text":"password";
+$("#login").onsubmit=async e=>{e.preventDefault();pw=$("#pw").value.trim();$("#loginErr").textContent="Entrando…";try{await call({action:"list"});sessionStorage.setItem("bravoAdm",pw);$("#loginErr").textContent="";start()}catch(e){$("#loginErr").textContent=e.message=="Senha incorreta"?"Senha incorreta":(e.message.startsWith("Erro")?e.message:"Erro ao carregar: "+e.message)}};
 function start(){$("#login").hidden=true;$("#panel").hidden=false;load();setInterval(load,30000)}
 $("#list").onclick=async e=>{const b=e.target.closest("button[data-s]");if(!b)return;try{const o=await call({action:"setStatus",id:b.dataset.id,status:b.dataset.s});orders=orders.map(x=>x.id==o.id?o:x);lastWa[o.id]=1;render()}catch(e){alert(e.message)}};
 
@@ -39,7 +40,7 @@ $("#atabs").onclick=e=>{const t=e.target.dataset.t;if(!t)return;document.querySe
 /* ---- taxas ---- */
 let B=[];
 async function loadB(){const s=await call({action:"getSettings"});B=s.bairros;$("#mpPct").value=String(s.mpPct).replace(".",",");drawB()}
-function drawB(){$("#tblB").innerHTML="<tr><td><b>Bairro</b></td><td><b>Taxa R$</b></td><td><b>Atende</b><br><small class="est">desmarque para desativar</small></td></tr>"+B.map((b,i)=>`<tr><td>${esc(b.nome)}</td><td><input data-i="${i}" data-f="taxa" inputmode="decimal" placeholder="a combinar" value="${b.taxa==null?"":String(b.taxa.toFixed(2)).replace(".",",")}"></td><td><input type="checkbox" data-i="${i}" data-f="ativo" ${b.ativo?"checked":""} style="width:22px;height:22px"></td></tr>`).join("")}
+function drawB(){$("#tblB").innerHTML="<tr><td><b>Bairro</b></td><td><b>Taxa R$</b></td><td><b>Atende</b><br><small class='est'>desmarque para desativar</small></td></tr>"+B.map((b,i)=>`<tr><td>${esc(b.nome)}</td><td><input data-i="${i}" data-f="taxa" inputmode="decimal" placeholder="a combinar" value="${b.taxa==null?"":String(b.taxa.toFixed(2)).replace(".",",")}"></td><td><input type="checkbox" data-i="${i}" data-f="ativo" ${b.ativo?"checked":""} style="width:22px;height:22px"></td></tr>`).join("")}
 $("#tblB").oninput=$("#tblB").onchange=e=>{const i=e.target.dataset.i;if(i==null)return;if(e.target.dataset.f=="ativo")B[i].ativo=e.target.checked;else{const v=e.target.value.trim();B[i].taxa=v===""?null:v}};
 $("#addB").onclick=()=>{const n=$("#newB").value.trim();if(n){B.unshift({nome:n,taxa:null,ativo:true});$("#newB").value="";drawB()}};
 $("#saveB").onclick=async()=>{try{const s=await call({action:"saveSettings",bairros:B,mpPct:$("#mpPct").value});B=s.bairros;drawB();alert("Taxas salvas!")}catch(e){alert(e.message)}};
