@@ -31,3 +31,26 @@ fieldset{border:1px solid #2a2a2a;border-radius:12px;padding:8px 10px}legend{col
 .opt{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid #222;font-size:15px}.opt:last-child{border:0}.opt span{flex:1}.opt input{width:20px;height:20px;accent-color:#f5b400}
 .det{color:#f5b400}#mAdd:disabled{opacity:.6}
 .row2{display:flex;gap:8px}.row2 input{flex:1;min-width:0}#addr[hidden]{display:none}
+
+.hero .hsub{display:block;font-size:.72rem;letter-spacing:.25em;text-transform:uppercase;color:#fff;opacity:.75;margin:-2px 0 4px}
+.promo{padding:0 14px;margin:12px auto;max-width:1000px}
+.pb{position:relative;overflow:hidden;display:flex;align-items:center;gap:6px;border-radius:20px;padding:14px 14px 14px 4px;background:radial-gradient(circle at 25% 50%,#7b2cbf 0,#3c096c 45%,#1a0530 100%);border:1px solid #f5b40066;box-shadow:0 8px 30px #3c096c88}
+.pimg{position:relative;flex:0 0 38%;max-width:200px;display:flex;justify-content:center}
+.pimg img{width:100%;height:auto;max-height:300px;object-fit:contain;position:relative;z-index:1;filter:drop-shadow(0 10px 14px #0009);animation:pfloat 3.2s ease-in-out infinite}
+.splash{position:absolute;inset:auto 5% 4% 5%;height:22%;border-radius:50%;background:radial-gradient(#c77dff99,transparent 70%);animation:psplash 3.2s ease-in-out infinite}
+.ptxt{flex:1;z-index:1;color:#fff}
+.ptag{margin:0;font-size:.7rem;font-weight:800;letter-spacing:.2em;color:#f5b400}
+.pdesc{margin:6px 0;font-size:1rem;font-weight:800;line-height:1.25;background:linear-gradient(90deg,#f5b400,#fff3c4,#f5b400,#d48c00);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:pshine 3s linear infinite}
+.pprice{margin:6px 0 10px;font-size:.9rem}
+.badge{display:inline-block;background:#f5b400;color:#1a0530;border-radius:999px;padding:4px 12px;font-size:1.15rem;font-weight:900;animation:ppulse 1.6s ease-in-out infinite}
+.pgo{background:#fff;color:#3c096c;border:0;border-radius:999px;padding:10px 20px;font-weight:900;font-size:1rem;cursor:pointer;box-shadow:0 4px 0 #f5b400}
+.pgo:active{transform:translateY(2px);box-shadow:0 2px 0 #f5b400}
+.bub{position:absolute;bottom:-14px;left:var(--x);width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fff,#c77dff 60%,transparent 70%);opacity:0;animation:pbub 4s ease-in infinite;animation-delay:var(--d)}
+.bub:nth-child(even){width:6px;height:6px;background:radial-gradient(circle at 30% 30%,#fff,#f5b400 60%,transparent 70%)}
+@keyframes pfloat{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-10px) rotate(4deg)}}
+@keyframes psplash{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(.8);opacity:.5}}
+@keyframes pshine{to{background-position:-250% 0}}
+@keyframes ppulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 #f5b40099}50%{transform:scale(1.08);box-shadow:0 0 0 8px #f5b40000}}
+@keyframes pbub{0%{transform:translateY(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-260px);opacity:0}}
+@media(min-width:700px){.pb{padding:20px 30px}.pimg{flex-basis:220px}.pdesc{font-size:1.5rem}.pprice{font-size:1.1rem}}
+@media(prefers-reduced-motion:reduce){.pimg img,.splash,.pdesc,.badge,.bub{animation:none}.bub{display:none}}

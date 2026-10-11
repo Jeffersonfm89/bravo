@@ -39,7 +39,7 @@ var PRODUCTS = [
         { id: "300", name: "300ml", price: 12.00 }, { id: "400", name: "400ml", price: 15.00 }, { id: "500", name: "500ml", price: 18.00 } ] },
       { id: "add", label: "Adicionais", type: "multi", min: 0, max: 4, choices: [
         { id: "pacoca", name: "Paçoca", price: 3.00 }, { id: "mm", name: "M&M", price: 5.00 }, { id: "ninho", name: "Ninho", price: 3.00 }, { id: "banana", name: "Banana", price: 3.00 } ] } ] },
-  { id: "a-garrafa", cat: "Açaí", name: "Açaí na Garrafa", desc: "Contém leite em pó e leite condensado.", price: 15.00, img: "img/acai-garrafa.jpg" }, // PROVISÓRIO
+  { id: "a-garrafa", cat: "Açaí", name: "Açaí na Garrafa 500ml", desc: "Com leite condensado e leite Ninho.", price: 19.99, img: "img/acai-garrafa.jpg" },
   { id: "b-coca-lata", cat: "Bebidas", name: "Coca-Cola Lata 350ml", desc: "Gelada", price: 6.00, img: "img/b-coca-lata.jpg" },
   { id: "b-coca-600", cat: "Bebidas", name: "Coca-Cola 600ml", desc: "Gelada", price: 10.00, img: "img/b-coca-600.jpg" },
   { id: "b-coca-2l", cat: "Bebidas", name: "Coca-Cola 2L", desc: "Gelada", price: 16.00, img: "img/b-coca-2l.jpg" },

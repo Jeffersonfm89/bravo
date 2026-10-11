@@ -74,3 +74,5 @@ function apiBase(){return API}
 $("#pixCopy").onclick=()=>{navigator.clipboard?.writeText($("#pixCode").value);toast("Código Pix copiado!")};
 $("#copy").onclick=()=>{$("#sumText").select();navigator.clipboard?.writeText($("#sumText").value).catch(()=>document.execCommand("copy"));toast("Pedido copiado!")};
 grid();render();
+
+(function(){var b=document.getElementById("promoGo");if(b)b.onclick=function(){addToCart("a-garrafa");if(typeof openCart=="function")openCart(true);}})();
