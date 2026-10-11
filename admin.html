@@ -9,23 +9,28 @@
 #newBanner{position:fixed;inset:0;z-index:50;background:#f5b400e6;display:flex;align-items:center;justify-content:center;animation:pulse 1s infinite}#newBanner[hidden]{display:none}
 #newBanner div{background:#000;color:#fff;border-radius:18px;padding:24px;text-align:center;display:flex;flex-direction:column;gap:16px;max-width:90%}#nbText{font-size:28px;color:#f5b400}
 #nbAck{background:#25d366;color:#000;border:0;border-radius:14px;padding:18px;font-size:20px;font-weight:800}@keyframes pulse{50%{background:#ff3b30e6}}
-#printArea{display:none}
+#printArea{display:none}.cbadge{background:#ff3b30;color:#fff;border-radius:10px;padding:0 6px;font-size:12px;margin-left:4px}
+.cmsgs{display:flex;flex-direction:column;gap:6px;max-height:55vh;overflow-y:auto;background:#0e0e0e;border-radius:12px;padding:10px;margin:8px 0}.cm{max-width:80%;padding:8px 10px;border-radius:12px;white-space:pre-wrap;word-wrap:break-word;font-size:14px}
+.cm.cliente{align-self:flex-start;background:#262626}.cm.loja{align-self:flex-end;background:#f5b400;color:#000}.cm.bot{align-self:flex-end;background:#3a3a1a}.cm small{display:block;opacity:.6;font-size:10px}.chi{cursor:pointer}
 @media print{body>*:not(#printArea){display:none!important}#printArea{display:block!important}body{background:#fff!important;color:#000!important;margin:0}}
 .tk{font-family:"Courier New",monospace;color:#000;font-size:12px;line-height:1.35}.tk h1{text-align:center;font-size:22px;margin:0;letter-spacing:3px}.tk .c{text-align:center}.tk hr{border:0;border-top:1px dashed #000;margin:5px 0}
 .tk table{width:100%;border-collapse:collapse}.tk td{vertical-align:top;padding:1px 0}.tk td.r{text-align:right;white-space:nowrap}.tk .big{font-size:16px;font-weight:bold}.tk .det{font-size:11px}.tk .st{font-size:15px;font-weight:bold;text-align:center;border:2px solid #000;padding:3px;margin:4px 0}
 </style></head><body>
 <header><img src="img/logo.jpg" alt="Bravo" class="logo"><b>Painel de pedidos</b></header>
 <div class="wrap"><form id="login" class="view"><input type="password" id="pw" placeholder="Senha do painel" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false"><label class="r"><input type="checkbox" id="showPw"> Mostrar senha</label><p id="loginErr" style="color:#f66;font-weight:700;margin:0"></p><button class="go">Entrar</button></form>
-<div id="panel" hidden><nav class="tabs" id="atabs"><button data-t="tPedidos" class="on">Pedidos</button><button data-t="tTaxas">Taxas de entrega</button><button data-t="tMet">Métricas</button><button data-t="tCli">Clientes</button></nav>
+<div id="panel" hidden><nav class="tabs" id="atabs"><button data-t="tPedidos" class="on">Pedidos</button><button data-t="tTaxas">Taxas de entrega</button><button data-t="tMet">Métricas</button><button data-t="tCli">Clientes</button><button data-t="tChat">Conversas <span id="chatBadge" class="cbadge" hidden>0</span></button></nav>
 <section id="tPedidos"><div id="alertBar" class="abar"><button id="btnAlerts" class="go" style="padding:10px">🔔 Ativar alertas de pedido</button>
 <label><input type="checkbox" id="optWake"> Manter tela ligada</label><label><input type="checkbox" id="optAutoPrint"> Imprimir automaticamente pedidos novos</label>
 <label>Papel: <select id="optPaper"><option value="80">80 mm</option><option value="58">58 mm</option><option value="a4">A4</option></select></label><button id="btnTestAlert" class="ghost" style="padding:6px 10px">Testar som</button><small id="alertInfo" class="est"></small></div><div id="filters"><label><input type="checkbox" id="hideDone" checked> Ocultar entregues/cancelados</label> <button id="reload" class="ghost" style="padding:6px 12px">Atualizar</button> <span id="upd" style="color:#777"></span></div><div id="list"></div></section>
 <section id="tTaxas" hidden><p class="cust">Bairros sem taxa aparecem para o cliente como "taxa a combinar". Para desativar um bairro, desmarque "Atende (desmarque para desativar)" — a taxa fica salva. Bairros não podem ser excluídos.</p>
 <div class="row2"><input id="newB" placeholder="Novo bairro"><button id="addB" class="ghost" style="padding:8px 12px">Adicionar</button></div>
 <table class="bd" id="tblB"></table><label class="cust">Taxa Mercado Pago no Pix (estimativa quando o MP não informa) %: <input id="mpPct" style="width:80px"></label>
-<button id="saveB" class="go">Salvar taxas</button></section>
+<h4>Adicionais de pastel (preço cada)</h4><table class="bd" id="tblAdds"></table><button id="saveB" class="go">Salvar taxas e preços</button></section>
 <section id="tMet" hidden><div class="row2" style="flex-wrap:wrap"><select id="per"><option value="hoje">Hoje</option><option value="7">7 dias</option><option value="30" selected>30 dias</option><option value="mes">Este mês</option><option value="custom">Personalizado</option></select>
 <input type="date" id="dFrom" hidden><input type="date" id="dTo" hidden><button id="goMet" class="ghost" style="padding:8px 12px">Ver</button></div><div id="met"></div></section>
+<section id="tChat" hidden><label class="cust"><input type="checkbox" id="aiAuto"> Resposta automática (IA) <small class="est" id="aiInfo"></small></label>
+<div id="chatList"></div><div id="chatView" hidden><button id="chatBack" class="ghost" style="padding:6px 12px">← Conversas</button><h3 id="chatTitle"></h3><div id="chatMsgs" class="cmsgs"></div>
+<form id="chatForm" class="row2"><input name="txt" placeholder="Responder…" maxlength="1000" autocomplete="off"><button class="go" style="padding:10px 14px">Enviar</button></form></div></section>
 <section id="tCli" hidden><input id="qCli" placeholder="Buscar por nome, telefone ou bairro"><div id="cli"></div></section></div></div>
 <script src="products.js"></script><script src="bairros.js"></script><script src="app-config.js"></script><script>
 const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -43,18 +48,18 @@ return `<div class="o"><h3><span>nº ${esc(o.id)}</span><span class="st">${esc(o
 async function load(){try{const d=await call({action:"list"});orders=d.orders;render();if(window.onOrders)onOrders(orders);$("#upd").textContent="Atualizado "+new Date().toLocaleTimeString("pt-BR")}catch(e){alert(e.message)}}
 $("#showPw").onchange=e=>$("#pw").type=e.target.checked?"text":"password";
 $("#login").onsubmit=async e=>{e.preventDefault();pw=$("#pw").value.trim();$("#loginErr").textContent="Entrando…";try{await call({action:"list"});sessionStorage.setItem("bravoAdm",pw);$("#loginErr").textContent="";start()}catch(e){$("#loginErr").textContent=e.message=="Senha incorreta"?"Senha incorreta":(e.message.startsWith("Erro")?e.message:"Erro ao carregar: "+e.message)}};
-function start(){$("#login").hidden=true;$("#panel").hidden=false;load();setInterval(load,10000);if(window.onStart)onStart()}
+function start(){$("#login").hidden=true;$("#panel").hidden=false;load();setInterval(load,10000);if(window.onStart)onStart();if(window.chatStart)chatStart()}
 $("#list").onclick=async e=>{const b=e.target.closest("button[data-s]");if(!b)return;try{const o=await call({action:"setStatus",id:b.dataset.id,status:b.dataset.s});orders=orders.map(x=>x.id==o.id?o:x);lastWa[o.id]=1;render()}catch(e){alert(e.message)}};
 
 /* ---- abas ---- */
-$("#atabs").onclick=e=>{const t=e.target.dataset.t;if(!t)return;document.querySelectorAll("#atabs button").forEach(b=>b.classList.toggle("on",b.dataset.t==t));["tPedidos","tTaxas","tMet","tCli"].forEach(x=>$("#"+x).hidden=x!=t);({tTaxas:loadB,tMet:loadMet,tCli:loadCli}[t]||(()=>{}))()};
+$("#atabs").onclick=e=>{const t=e.target.dataset.t;if(!t)return;document.querySelectorAll("#atabs button").forEach(b=>b.classList.toggle("on",b.dataset.t==t));["tPedidos","tTaxas","tMet","tCli","tChat"].forEach(x=>$("#"+x).hidden=x!=t);({tTaxas:loadB,tMet:loadMet,tCli:loadCli,tChat:()=>window.loadChats&&loadChats(true)}[t]||(()=>{}))()};
 /* ---- taxas ---- */
 let B=[];
-async function loadB(){const s=await call({action:"getSettings"});B=s.bairros;$("#mpPct").value=String(s.mpPct).replace(".",",");drawB()}
+async function loadB(){const s=await call({action:"getSettings"});B=s.bairros;$("#mpPct").value=String(s.mpPct).replace(".",",");drawB();const pa=s.pastelAdds||{};$("#tblAdds").innerHTML=PASTEL_ADDS.map(a=>`<tr><td>${esc(a.name)}</td><td><input data-add="${a.id}" inputmode="decimal" value="${String((pa[a.id]??a.price).toFixed(2)).replace(".",",")}"></td></tr>`).join("")}
 function drawB(){$("#tblB").innerHTML="<tr><td><b>Bairro</b></td><td><b>Taxa R$</b></td><td><b>Atende</b><br><small class='est'>desmarque para desativar</small></td></tr>"+B.map((b,i)=>`<tr><td>${esc(b.nome)}</td><td><input data-i="${i}" data-f="taxa" inputmode="decimal" placeholder="a combinar" value="${b.taxa==null?"":String(b.taxa.toFixed(2)).replace(".",",")}"></td><td><input type="checkbox" data-i="${i}" data-f="ativo" ${b.ativo?"checked":""} style="width:22px;height:22px"></td></tr>`).join("")}
 $("#tblB").oninput=$("#tblB").onchange=e=>{const i=e.target.dataset.i;if(i==null)return;if(e.target.dataset.f=="ativo")B[i].ativo=e.target.checked;else{const v=e.target.value.trim();B[i].taxa=v===""?null:v}};
 $("#addB").onclick=()=>{const n=$("#newB").value.trim();if(n){B.unshift({nome:n,taxa:null,ativo:true});$("#newB").value="";drawB()}};
-$("#saveB").onclick=async()=>{try{const s=await call({action:"saveSettings",bairros:B,mpPct:$("#mpPct").value});B=s.bairros;drawB();alert("Taxas salvas!")}catch(e){alert(e.message)}};
+$("#saveB").onclick=async()=>{try{const s=await call({action:"saveSettings",bairros:B,mpPct:$("#mpPct").value,pastelAdds:Object.fromEntries([...document.querySelectorAll("[data-add]")].map(i=>[i.dataset.add,i.value]))});B=s.bairros;drawB();alert("Taxas salvas!")}catch(e){alert(e.message)}};
 /* ---- métricas ---- */
 $("#per").onchange=()=>{const c=$("#per").value=="custom";$("#dFrom").hidden=$("#dTo").hidden=!c;if(!c)loadMet()};$("#goMet").onclick=loadMet;
 const spDay=d=>new Date(new Date(d).getTime()-3*3600e3).toISOString().slice(0,10); // dia em Brasília
@@ -89,4 +94,4 @@ ${e?`📍 ${esc(e.rua||"")}, ${esc(e.numero||"")}${e.complemento?" - "+esc(e.com
 $("#qCli").oninput=drawCli;
 $("#hideDone").onchange=render;$("#reload").onclick=load;if(pw)start();
 </script><div id="newBanner" hidden><div><b id="nbText">NOVO PEDIDO!</b><button id="nbAck">OK, vi o pedido</button></div></div>
-<div id="printArea"></div><style id="pageStyle"></style><script src="admin-extra.js"></script></body></html>
+<div id="printArea"></div><style id="pageStyle"></style><script src="admin-extra.js"></script><script src="admin-chat.js"></script></body></html>

@@ -18,4 +18,4 @@ $("#out").innerHTML=`<p>Pedido nº <b>${esc(o.id)}</b></p><p class="big">${esc(o
 const cp=$("#cp");if(cp)cp.onclick=e=>{e.preventDefault();navigator.clipboard?.writeText(o.pix.qr_code);cp.textContent="Copiado!"};
 if(["Entregue","Cancelado"].includes(o.status))clearInterval(t)}catch(e){$("#out").textContent=e.message||"Pedido não encontrado"}}
 const t=setInterval(load,10000);load();
-</script></body></html>
+</script><script src="chat.js"></script></body></html>

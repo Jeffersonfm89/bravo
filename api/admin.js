@@ -1,8 +1,8 @@
 // Painel do dono: POST com header X-Admin-Password. Ações: list | setStatus {id,status}
 const crypto = require('crypto');
 const { cors, body, fail, bad } = require('./_lib/common');
-const { saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings } = require('./_lib/store');
-const { ORDER_STATUSES } = require('../products.js');
+const { getChat, saveChat, listChats, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings } = require('./_lib/store');
+const { ORDER_STATUSES, PASTEL_ADDS } = require('../products.js');
 function authed(req) {
   const want = process.env.ADMIN_PASSWORD || ''; const got = String(req.headers['x-admin-password'] || '');
   if (!want) return false;
@@ -21,8 +21,16 @@ module.exports = async (req, res) => {
       const os = await listOrders({ limit: 5000, from });
       return res.json({ orders: os.filter(o => !from || o.criadoEm >= from).map(({ pixQr, historico, ...o }) => o), settings: { mpPct: (await getSettings()).mpPct } });
     }
+    if (b.action === 'chats') return res.json({ chats: (await listChats()).map(c => ({ id: c.id, nome: c.nome, tel: c.tel, orderId: c.orderId, unreadAdmin: c.unreadAdmin || 0, n: c.msgs.length, last: c.msgs.slice(-1)[0] || null, atualizadoEm: c.atualizadoEm, humano: c.humano })) });
+    if (b.action === 'chatGet' || b.action === 'chatReply') {
+      const c = await getChat(String(b.id || '')); if (!c) return res.status(404).json({ error: 'Conversa não encontrada' });
+      if (b.action === 'chatReply') { const txt = String(b.txt || '').trim().slice(0, 1000); if (!txt) throw bad('Mensagem vazia');
+        c.msgs.push({ de: 'loja', txt, em: new Date().toISOString() }); c.unreadCliente = (c.unreadCliente || 0) + 1; c.humano = true; }
+      c.unreadAdmin = 0; await saveChat(c); const { token, ...out } = c; return res.json(out);
+    }
+    if (b.action === 'setAi') { const s = await getSettings(); s.aiAuto = !!b.aiAuto; await saveSettings(s); return res.json({ aiAuto: s.aiAuto, aiKey: !!process.env.AI_API_KEY }); }
     if (b.action === 'customers') return res.json({ customers: await listCustomers() });
-    if (b.action === 'getSettings') return res.json(await getSettings());
+    if (b.action === 'getSettings') return res.json({ ...(await getSettings()), aiKey: !!process.env.AI_API_KEY });
     if (b.action === 'saveSettings') {
       const s = await getSettings(), seen = new Set(), old = s.bairros;
       if (!Array.isArray(b.bairros) || b.bairros.length > 300) throw bad('Lista de bairros inválida');
@@ -34,6 +42,8 @@ module.exports = async (req, res) => {
       }).filter(Boolean);
       // bairros não podem ser excluídos: os que faltarem na lista enviada são mantidos como estavam
       s.bairros = s.bairros.concat(old.filter(x => !seen.has(x.nome.toLowerCase())));
+      if (typeof b.aiAuto === 'boolean') s.aiAuto = b.aiAuto;
+      if (b.pastelAdds && typeof b.pastelAdds === 'object') { const m = {}; PASTEL_ADDS.forEach(a => { const raw = b.pastelAdds[a.id]; if (raw === undefined || raw === '') return; const v = Number(String(raw).replace(',', '.')); if (!(v >= 0 && v <= 100)) throw bad('Preço inválido: ' + a.name); m[a.id] = Math.round(v * 100) / 100; }); s.pastelAdds = m; }
       const pct = Number(String(b.mpPct ?? s.mpPct).replace(',', '.')); if (!(pct >= 0 && pct <= 20)) throw bad('% Mercado Pago inválido'); s.mpPct = pct;
       await saveSettings(s); return res.json(s);
     }

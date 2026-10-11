@@ -41,4 +41,9 @@ async function getSettings() {
   return s;
 }
 const saveSettings = s => putJSON('config/settings.json', s);
-module.exports = { saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings, telKey };
+// ---- conversas (chat)
+const CKEY = id => `chats/${id}.json`;
+const getChat = id => /^[a-f0-9]{16}$/.test(String(id)) ? getJSON(CKEY(id)) : null;
+const saveChat = c => { c.atualizadoEm = new Date().toISOString(); return putJSON(CKEY(c.id), c); };
+async function listChats() { return (await mapLimit(await listKeys('chats/'), 25, b => getJSON(b.pathname))).filter(Boolean).sort((a, b) => b.atualizadoEm.localeCompare(a.atualizadoEm)); }
+module.exports = { getChat, saveChat, listChats, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings, telKey };

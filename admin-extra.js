@@ -71,7 +71,7 @@
       if (c.rua) h += "<div>" + e(c.rua) + ", " + e(c.numero) + (c.complemento ? " - " + e(c.complemento) : "") + "</div><div><b>Bairro:</b> " + e(c.bairro) + "</div>" + (c.referencia ? "<div><b>Ref.:</b> " + e(c.referencia) + "</div>" : "");
       else h += "<div>" + e(c.end) + "</div>"; }
     h += "<hr><table>";
-    o.itens.forEach(function (i) { h += "<tr><td><b>" + i.qty + "x " + e(i.name) + "</b>" + (i.detalhe ? '<div class="det">' + e(i.detalhe) + "</div>" : "") + '<div class="det">' + brlFmt(i.unit) + ' cada</div></td><td class="r">' + brlFmt(i.subtotal) + "</td></tr>"; });
+    o.itens.forEach(function (i) { h += "<tr><td><b>" + i.qty + "x " + e(i.name) + "</b>" + (i.detalhe ? '<div class="det">' + e(i.detalhe).replace(/(SEM [^,+·]+)/g, '<b style="font-size:13px">$1</b>') + "</div>" : "") + '<div class="det">' + brlFmt(i.unit) + ' cada</div></td><td class="r">' + brlFmt(i.subtotal) + "</td></tr>"; });
     h += "</table><hr><table><tr><td>Subtotal</td><td class='r'>" + brlFmt(o.subtotal) + "</td></tr><tr><td>Taxa de entrega</td><td class='r'>" + feeLabel(o.taxaEntrega) + "</td></tr>";
     h += "<tr class='big'><td><b>TOTAL</b></td><td class='r'><b>" + brlFmt(o.total) + (o.taxaEntrega == null ? " + entrega" : "") + "</b></td></tr></table>";
     h += "<div><b>Pagamento:</b> " + e(o.pagamento) + '</div><div class="st">' + e(pagoTxt) + "</div>";
@@ -91,6 +91,7 @@
     setTimeout(function () { window.print(); }, 150);
   }
   window.printOrders = printOrders;
+  window.bravoAlert = function (t, body) { startAlarm(t); notify('🔔 ' + t, body || ''); };
   document.addEventListener("pointerdown", unlockAudio, true);           // qualquer toque libera o som
   if (!q("#panel").hidden) window.onStart();
   document.addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest("[data-print]"); if (!b) return; var o = (window.getOrders ? window.getOrders() : []).find(function (x) { return x.id === b.dataset.print; }); if (o) printOrders([o]); });

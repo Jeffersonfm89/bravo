@@ -7,25 +7,25 @@ const $=s=>document.querySelector(s),brl=v=>v.toLocaleString("pt-BR",{style:"cur
 localStorage.removeItem("bravoCart");
 let cart=JSON.parse(localStorage.getItem("bravoCart2")||"{}");let cat="all";
 // limpa itens que não existem mais no cardápio
-for(const k in cart){try{const p=PRODUCTS.find(p=>p.id==cart[k].id);if(p.ativo===false)throw 0;priceItem(p,cart[k].opts)}catch(e){delete cart[k]}}
+for(const k in cart){try{const p=PRODUCTS.find(p=>p.id==cart[k].id);if(p.ativo===false)throw 0;priceItem(p,cart[k].opts,cart[k].nota)}catch(e){delete cart[k]}}
 const save=()=>{localStorage.setItem("bravoCart2",JSON.stringify(cart));render()};
 const fromPrice=p=>p.price+(p.options||[]).reduce((s,g)=>s+(g.min?g.choices.map(c=>c.price).sort((a,b)=>a-b).slice(0,g.min).reduce((a,b)=>a+b,0):0),0);
 function grid(){$("#grid").innerHTML=PRODUCTS.filter(p=>p.ativo!==false&&(cat=="all"||p.cat==cat)).map(p=>`<div class="card"><img src="${p.img}" alt="${p.name}" loading="lazy"><div class="b"><h3>${p.name}</h3><small>${p.desc}</small><div class="p">${p.options?"a partir de ":""}${brl(fromPrice(p))}</div><button class="add" data-id="${p.id}">${p.options?"Escolher":"Adicionar"}</button></div></div>`).join("")}
-function lines(){return Object.entries(cart).map(([k,c])=>{const p=PRODUCTS.find(x=>x.id==c.id),pr=priceItem(p,c.opts);return{k,p,qty:c.qty,...pr}})}
+function lines(){return Object.entries(cart).map(([k,c])=>{const p=PRODUCTS.find(x=>x.id==c.id),pr=priceItem(p,c.opts,c.nota);return{k,p,qty:c.qty,...pr}})}
 function total(){return lines().reduce((s,l)=>s+l.unit*l.qty,0)}
-function addToCart(id,opts){const pr=priceItem(PRODUCTS.find(p=>p.id==id),opts),k=id+"|"+JSON.stringify(pr.opts);cart[k]=cart[k]||{id,opts:pr.opts,qty:0};cart[k].qty++;save();toast("Adicionado ao carrinho!")}
+function addToCart(id,opts,nota){const pr=priceItem(PRODUCTS.find(p=>p.id==id),opts,nota),k=id+"|"+JSON.stringify(pr.opts)+"|"+(pr.nota||"");cart[k]=cart[k]||{id,opts:pr.opts,nota:pr.nota||"",qty:0};cart[k].qty++;save();toast("Adicionado ao carrinho!")}
 function render(){const L=lines(),n=L.reduce((a,l)=>a+l.qty,0);$("#count").textContent=n;
 $("#items").innerHTML=n?L.map(l=>`<div class="it"><img src="${l.p.img}" alt=""><div class="n">${l.p.name}${l.detalhe?`<br><small class="det">${esc(l.detalhe)}</small>`:""}<br><b>${brl(l.unit*l.qty)}</b><br><button class="rm" data-rm="${esc(l.k)}">Remover</button></div><div class="q"><button data-dec="${esc(l.k)}">−</button><span>${l.qty}</span><button data-inc="${esc(l.k)}">+</button></div></div>`).join(""):"<p>Seu carrinho está vazio.</p>";
 $("#total").textContent=brl(total());if(!n&&!$("#vReview").hidden)view("vCart")}
 /* ---- Modal de opções ---- */
 let mp=null;
 function openOpts(p){mp=p;$("#mTitle").textContent=p.name;$("#mDesc").textContent=p.desc;
-$("#mBody").innerHTML=p.options.map(g=>`<fieldset><legend>${g.label}${g.type=="single"?" (escolha 1)":g.min?` (mín. ${g.min}, máx. ${g.max})`:" (opcional)"}</legend>${g.choices.map((c,i)=>`<label class="opt"><input type="${g.type=="single"?"radio":"checkbox"}" name="g_${g.id}" value="${c.id}" ${g.type=="single"&&i==0?"checked":""}> <span>${c.name}</span><b>${c.price?(g.type=="single"&&!p.price?"":"+ ")+brl(c.price):""}</b></label>`).join("")}</fieldset>`).join("");
+$("#mBody").innerHTML=p.options.map(g=>`<fieldset><legend>${g.label}${g.type=="single"?" (escolha 1)":g.min?` (mín. ${g.min}, máx. ${g.max})`:" (opcional)"}</legend>${g.choices.map((c,i)=>`<label class="opt"><input type="${g.type=="single"?"radio":"checkbox"}" name="g_${g.id}" value="${c.id}" ${g.type=="single"&&i==0?"checked":""}> <span>${c.name}</span><b>${c.price?(g.type=="single"&&!p.price?"":"+ ")+brl(c.price):""}</b></label>`).join("")}</fieldset>`).join("")+(p.nota?`<fieldset><legend>Outra observação</legend><input id="mNota" maxlength="100" placeholder="Ex.: bem passado, cortar ao meio" style="width:100%"></fieldset>`:"");
 updOpts();$("#optModal").hidden=false}
 function readOpts(){const o={};mp.options.forEach(g=>o[g.id]=[...document.querySelectorAll(`[name=g_${g.id}]:checked`)].map(x=>x.value));return o}
-function updOpts(){try{const pr=priceItem(mp,readOpts());$("#mAdd").disabled=false;$("#mAdd").textContent="Adicionar · "+brl(pr.unit)}catch(e){$("#mAdd").disabled=true;$("#mAdd").textContent=e.message}}
-$("#mBody").onchange=e=>{const g=mp.options.find(g=>"g_"+g.id==e.target.name);if(g&&g.type=="multi"&&e.target.checked&&readOpts()[g.id].length>g.max){e.target.checked=false;toast("Máximo de "+g.max)}updOpts()};
-$("#mAdd").onclick=()=>{addToCart(mp.id,readOpts());$("#optModal").hidden=true};$("#mClose").onclick=()=>$("#optModal").hidden=true;
+function updOpts(){try{const pr=priceItem(mp,readOpts(),$("#mNota")?.value);$("#mAdd").disabled=false;$("#mAdd").textContent="Adicionar · "+brl(pr.unit)}catch(e){$("#mAdd").disabled=true;$("#mAdd").textContent=e.message}}
+$("#mBody").oninput=e=>{if(e.target.id=="mNota")updOpts()};$("#mBody").onchange=e=>{const g=mp.options.find(g=>"g_"+g.id==e.target.name);if(g&&g.type=="multi"&&e.target.checked&&readOpts()[g.id].length>g.max){e.target.checked=false;toast("Máximo de "+g.max)}updOpts()};
+$("#mAdd").onclick=()=>{addToCart(mp.id,readOpts(),$("#mNota")?.value);$("#optModal").hidden=true};$("#mClose").onclick=()=>$("#optModal").hidden=true;
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("s");setTimeout(()=>e.classList.remove("s"),1400)}
 function openCart(o){$("#drawer").classList.toggle("open",o);$("#overlay").hidden=!o;if(o&&!$("#vDone").hidden&&Object.keys(cart).length)view("vCart")}
 document.addEventListener("click",e=>{const d=e.target.dataset;
@@ -36,7 +36,7 @@ $("#cartBtn").onclick=()=>openCart(true);$("#closeCart").onclick=$("#overlay").o
 document.querySelectorAll("[name=tipo]").forEach(r=>r.onchange=()=>{const ent=$("[name=tipo]:checked").value=="Entrega";$("#addr").hidden=!ent;$("#addr").querySelectorAll("[required],[data-req]").forEach(i=>{i.dataset.req=1;i.required=ent})});
 /* ---- Bairros e taxas (do servidor) ---- */
 let BAIRROS=[];const feeOf=n=>{const b=BAIRROS.find(x=>x.nome==n);return b?b.taxa:undefined};
-async function loadBairros(){try{if(API===null)throw 0;const d=await(await fetch(API+"/api/config")).json();BAIRROS=d.bairros||[]}catch(e){BAIRROS=DEFAULT_BAIRROS.map(nome=>({nome,taxa:null}))}
+async function loadBairros(){try{if(API===null)throw 0;const d=await(await fetch(API+"/api/config")).json();BAIRROS=d.bairros||[];if(d.pastelAdds){applyAddPrices(d.pastelAdds);grid();render()}}catch(e){BAIRROS=DEFAULT_BAIRROS.map(nome=>({nome,taxa:null}))}
 $("#bairro").innerHTML='<option value="">Selecione o bairro</option>'+BAIRROS.map(b=>`<option value="${esc(b.nome)}">${esc(b.nome)} — ${b.taxa==null?"taxa a combinar":"entrega "+brl(b.taxa)}</option>`).join("")}
 $("#bairro").onchange=()=>{const f=feeOf($("#bairro").value);$("#feeInfo").textContent=f===undefined?"":"Taxa de entrega: "+feeLabel(f)};loadBairros();
 /* ---- Checkout: dados → revisão → confirmação ---- */
@@ -51,15 +51,15 @@ $("#checkout").onsubmit=e=>{e.preventDefault();if(!Object.keys(cart).length){toa
 const f=new FormData(e.target),ent=f.get("tipo")=="Entrega",cliente={nome:f.get("nome"),tel:f.get("tel"),email:f.get("email"),tipo:f.get("tipo"),obs:f.get("obs")};
 if(ent){Object.assign(cliente,{bairro:f.get("bairro"),rua:f.get("rua"),numero:f.get("numero"),complemento:f.get("complemento"),referencia:f.get("referencia")});
 cliente.end=`${cliente.rua}, ${cliente.numero}${cliente.complemento?" - "+cliente.complemento:""} - ${cliente.bairro}, Joinville${cliente.referencia?" (Ref.: "+cliente.referencia+")":""}`}
-let br;try{br=buildBreakdown(Object.values(cart).map(c=>({id:c.id,qty:c.qty,opts:c.opts})),cliente.tipo,ent?feeOf(cliente.bairro)??null:0)}catch(err){toast(err.message);return}
+let br;try{br=buildBreakdown(Object.values(cart).map(c=>({id:c.id,qty:c.qty,opts:c.opts,nota:c.nota})),cliente.tipo,ent?feeOf(cliente.bairro)??null:0)}catch(err){toast(err.message);return}
 draft={...br,cliente,pagamento:f.get("pag")};$("#reviewBox").innerHTML=breakdownHTML(draft)+custHTML(cliente,draft.pagamento);view("vReview")};
 $("#back").onclick=()=>view("vCart");
 $("#confirm").onclick=async()=>{const api=apiBase(),btn=$("#confirm");
 if(api===null){showDone({...draft,id:""},false);return}
 btn.disabled=true;btn.textContent="Enviando…";
-try{const r=await fetch(api+"/api/pedido",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:draft.itens.map(i=>({id:i.id,qty:i.qty,opts:i.opts})),cliente:draft.cliente,pagamento:draft.pagamento})});
+try{const r=await fetch(api+"/api/pedido",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:draft.itens.map(i=>({id:i.id,qty:i.qty,opts:i.opts,nota:i.nota})),cliente:draft.cliente,pagamento:draft.pagamento})});
 const o=await r.json();if(!r.ok)throw new Error(o.error||"Falha ao enviar pedido");
-cart={};save();document.querySelectorAll(".oid").forEach(x=>x.textContent=o.id);document.querySelectorAll(".trackLink").forEach(a=>a.href=trackURL(o.id));
+cart={};save();localStorage.setItem("bravoLastOrder",o.id);document.querySelectorAll(".oid").forEach(x=>x.textContent=o.id);document.querySelectorAll(".trackLink").forEach(a=>a.href=trackURL(o.id));
 if(o.pixErro)toast("Pix automático indisponível: combine o Pix pelo WhatsApp");
 if(o.pagamento=="Pix"&&o.pix){view("vPix");$("#pixAmount").textContent=brlFmt(o.total);$("#pixQr").src="data:image/png;base64,"+o.pix.qr_code_base64;$("#pixCode").value=o.pix.qr_code;$("#pixStatus").textContent="Aguardando pagamento…";$("#pixStatus").classList.remove("ok");
 clearInterval(poll);poll=setInterval(async()=>{try{const s=await(await fetch(api+"/api/pedido?id="+o.id)).json();

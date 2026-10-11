@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const { cors, mp, body, fail, bad, clean } = require('./_lib/common');
 const { saveOrder, getOrder, touchCustomer, getSettings } = require('./_lib/store');
 const { markPaid } = require('./_lib/paid');
-const { buildBreakdown } = require('../products.js');
+const { buildBreakdown, applyAddPrices } = require('../products.js');
 const PAGS = ['Pix', 'Cartão', 'Dinheiro na entrega'];
 function newId() { const d = new Date(Date.now() - 3 * 3600e3); return d.toISOString().slice(2, 10).replace(/-/g, '') + '-' + crypto.randomBytes(4).toString('hex').toUpperCase(); }
 function publicView(o) { const { pixQr, ...rest } = o; return rest; }
@@ -37,6 +37,7 @@ module.exports = async (req, res) => {
     }
     const pagamento = PAGS.includes(b.pagamento) ? b.pagamento : null; if (!pagamento) throw bad('Forma de pagamento inválida');
     if (!Array.isArray(b.items) || !b.items.length || b.items.length > 50) throw bad('Carrinho inválido');
+    applyAddPrices((await getSettings()).pastelAdds);   // preços de adicionais definidos no painel
     let br; try { br = buildBreakdown(b.items, cliente.tipo, fee); } catch (e) { throw bad(e.message); }   // preços SEMPRE do servidor
     const now = new Date().toISOString();
     const o = { id: newId(), criadoEm: now, status: 'Recebido', pago: false, pagamento, cliente, ...br, historico: [{ em: now, status: 'Recebido' }] };
