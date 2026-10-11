@@ -5,6 +5,7 @@ const mem=new Map();const blobPath=require.resolve('@vercel/blob');
 require.cache[blobPath]={id:blobPath,filename:blobPath,loaded:true,exports:{
  put:async(k,v)=>{mem.set(k,{v,at:new Date()});return{pathname:k}},
  get:async k=>mem.has(k)?{stream:new Response(mem.get(k).v).body}:null,
+ del:async k=>{mem.delete(k)},
  list:async({prefix})=>({blobs:[...mem].filter(([k])=>k.startsWith(prefix)).map(([k,x])=>({pathname:k,uploadedAt:x.at})),hasMore:false})}};
 const http=require('http'),fs=require('fs'),path=require('path'),url=require('url');
 const calls=[];let st='pending',lastAmt,lastRef;

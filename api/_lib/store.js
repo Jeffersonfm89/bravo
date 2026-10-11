@@ -46,4 +46,12 @@ const CKEY = id => `chats/${id}.json`;
 const getChat = id => /^[a-f0-9]{16}$/.test(String(id)) ? getJSON(CKEY(id)) : null;
 const saveChat = c => { c.atualizadoEm = new Date().toISOString(); return putJSON(CKEY(c.id), c); };
 async function listChats() { return (await mapLimit(await listKeys('chats/'), 25, b => getJSON(b.pathname))).filter(Boolean).sort((a, b) => b.atualizadoEm.localeCompare(a.atualizadoEm)); }
-module.exports = { getChat, saveChat, listChats, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings, telKey };
+async function setOptOut(tel, v) { const k = telKey(tel), key = `customers/${k}.json`, c = await getJSON(key); if (!c) return null; c.optOut = !!v; await putJSON(key, c); return c; }
+// ---- listas de chamada (reativação)
+const LKEY = id => `lists/${id}.json`;
+const getList = id => /^[a-f0-9]{12}$/.test(String(id)) ? getJSON(LKEY(id)) : null;
+const saveList = l => { l.atualizadoEm = new Date().toISOString(); return putJSON(LKEY(l.id), l); };
+async function allLists() { return (await mapLimit(await listKeys('lists/'), 25, b => getJSON(b.pathname))).filter(Boolean).sort((a, b) => b.criadoEm.localeCompare(a.criadoEm)); }
+const { del } = require('@vercel/blob');
+const delList = id => del(LKEY(id));
+module.exports = { setOptOut, getList, saveList, allLists, delList, getChat, saveChat, listChats, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings, telKey };
