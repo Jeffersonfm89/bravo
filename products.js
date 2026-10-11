@@ -40,9 +40,9 @@ var PRODUCTS = [
       { id: "add", label: "Adicionais", type: "multi", min: 0, max: 4, choices: [
         { id: "pacoca", name: "Paçoca", price: 3.00 }, { id: "mm", name: "M&M", price: 5.00 }, { id: "ninho", name: "Ninho", price: 3.00 }, { id: "banana", name: "Banana", price: 3.00 } ] } ] },
   { id: "a-garrafa", cat: "Açaí", name: "Açaí na Garrafa", desc: "Contém leite em pó e leite condensado.", price: 15.00, img: "img/acai-garrafa.jpg" }, // PROVISÓRIO
-  { id: "b-coca-lata", cat: "Bebidas", name: "Coca-Cola Lata 350ml", desc: "Gelada", price: 6.00, img: "img/coca.jpg" },
-  { id: "b-coca-600", cat: "Bebidas", name: "Coca-Cola 600ml", desc: "Gelada", price: 10.00, img: "img/coca.jpg" },
-  { id: "b-coca-2l", cat: "Bebidas", name: "Coca-Cola 2L", desc: "Gelada", price: 16.00, img: "img/coca.jpg" },
+  { id: "b-coca-lata", cat: "Bebidas", name: "Coca-Cola Lata 350ml", desc: "Gelada", price: 6.00, img: "img/b-coca-lata.jpg" },
+  { id: "b-coca-600", cat: "Bebidas", name: "Coca-Cola 600ml", desc: "Gelada", price: 10.00, img: "img/b-coca-600.jpg" },
+  { id: "b-coca-2l", cat: "Bebidas", name: "Coca-Cola 2L", desc: "Gelada", price: 16.00, img: "img/b-coca-2l.jpg" },
 ];
 /* Valida opções e calcula preço unitário + descrição ("300ml + Paçoca, Ninho"). Usado no site e no servidor. */
 function priceItem(p, opts, nota) {
@@ -67,7 +67,7 @@ function priceItem(p, opts, nota) {
    (Pronto para um futuro cálculo por bairro/distância: troque deliveryFee() abaixo.) */
 var DELIVERY_FEE = null;
 function deliveryFee(tipo) { return tipo === 'Retirada' ? 0 : DELIVERY_FEE; }
-var ORDER_STATUSES = ['Recebido', 'Aceito', 'Em produção', 'Saiu para entrega', 'Pronto para retirada', 'Entregue', 'Cancelado'];
+var ORDER_STATUSES = ['Recebido', 'Aceito', 'Em produção', 'Pronto', 'Saiu para entrega', 'Pronto para retirada', 'Entregue', 'Cancelado'];
 function brlFmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
 /* Monta itens + subtotal + taxa + total (mesma regra no site e no servidor). */
 function buildBreakdown(cartPairs, tipo, fee) {

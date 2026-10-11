@@ -37,7 +37,7 @@ const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>(
 let pw=sessionStorage.getItem("bravoAdm")||"",orders=[],lastWa={};window.getOrders=()=>orders;
 async function call(body){const r=await fetch(API+"/api/admin",{method:"POST",headers:{"Content-Type":"application/json","X-Admin-Password":pw},body:JSON.stringify(body)});const d=await r.json();if(r.status==401){sessionStorage.removeItem("bravoAdm");$("#panel").hidden=true;$("#login").hidden=false;throw new Error("Senha incorreta")}if(!r.ok)throw new Error("Erro ao carregar: "+(d.error||r.status));return d}
 const phone=t=>{let d=String(t).replace(/\D/g,"");if(d.length<=11)d="55"+d;return d};
-const msgs={"Aceito":"seu pedido foi aceito e já vai para a cozinha!","Em produção":"seu pedido está sendo preparado agora! 🔥","Saiu para entrega":"seu pedido saiu para entrega! 🛵","Pronto para retirada":"seu pedido está pronto para retirada! 🎉","Entregue":"pedido entregue. Obrigado e bom apetite! 😋","Cancelado":"infelizmente seu pedido foi cancelado. Fale com a gente se tiver dúvidas.","Recebido":"recebemos seu pedido!"};
+const msgs={"Pronto":"seu pedido está pronto e logo sai para entrega! 🎉","Aceito":"seu pedido foi aceito e já vai para a cozinha!","Em produção":"seu pedido está sendo preparado agora! 🔥","Saiu para entrega":"seu pedido saiu para entrega! 🛵","Pronto para retirada":"seu pedido está pronto para retirada! 🎉","Entregue":"pedido entregue. Obrigado e bom apetite! 😋","Cancelado":"infelizmente seu pedido foi cancelado. Fale com a gente se tiver dúvidas.","Recebido":"recebemos seu pedido!"};
 function waLink(o){const txt=`Olá, ${o.cliente.nome}! Aqui é da Bravo 👑\nPedido nº ${o.id}: ${msgs[o.status]}\n\nResumo:\n`+orderText(o,"").split("\n\nNome:")[0]+`\n\nAcompanhe: ${SITE_URL}pedido.html?id=${o.id}`;return `https://wa.me/${phone(o.cliente.tel)}?text=${encodeURIComponent(txt)}`}
 function render(){const hide=$("#hideDone").checked;$("#list").innerHTML=orders.filter(o=>!hide||!["Entregue","Cancelado"].includes(o.status)).map(o=>{const c=o.cliente,dt=new Date(o.criadoEm).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"});
 return `<div class="o"><h3><span>nº ${esc(o.id)}</span><span class="st">${esc(o.status)}</span></h3><small>${dt}</small> · ${o.pagamento=="Pix"?(o.pago?'<b class="paid">PIX PAGO</b>':'<b class="pend">Pix pendente</b>'):esc(o.pagamento)}
@@ -70,7 +70,7 @@ async function loadMet(){$("#met").textContent="Carregando…";try{const r=range
 const os=d.orders.filter(o=>o.criadoEm>=r.from&&o.criadoEm<=r.to&&o.status!="Cancelado"),pct=d.settings.mpPct/100;
 const days=Math.max(1,Math.round((new Date(r.b)-new Date(r.a))/864e5)+1);
 let fat=0,taxas=0,itensQ=0,mpReal=0,mpEst=0;const prod={},opt={},pag={};
-os.forEach(o=>{fat+=o.total;taxas+=o.taxaEntrega||0;const pk=o.pagamento+(o.pagamento=="Pix"?(o.pago?" (pago)":" (não pago)"):"");pag[pk]=pag[pk]||{n:0,v:0};pag[pk].n++;pag[pk].v+=o.total;
+os.forEach(o=>{fat+=o.total;taxas+=o.taxaEntrega||0;const pk=o.pagamentoFinal||(o.pagamento+(o.pagamento=="Pix"?(o.pago?" (pago)":" (não pago)"):""));pag[pk]=pag[pk]||{n:0,v:0};pag[pk].n++;pag[pk].v+=o.total;
 if(o.pagamento=="Pix"&&o.pago){if(typeof o.mpTaxa=="number")mpReal+=o.mpTaxa;else mpEst+=o.total*pct}
 o.itens.forEach(i=>{itensQ+=i.qty;const k=i.name+(i.id=="a-copo"&&i.detalhe?" "+i.detalhe.split(" ")[0]:"");prod[k]=prod[k]||{q:0,v:0};prod[k].q+=i.qty;prod[k].v+=i.subtotal;
 if(i.id=="a-copo"&&i.detalhe&&i.detalhe.includes(" + "))i.detalhe.split(" + ")[1].split(", ").forEach(x=>{opt[x]=(opt[x]||0)+i.qty})})});
@@ -94,4 +94,4 @@ ${e?`📍 ${esc(e.rua||"")}, ${esc(e.numero||"")}${e.complemento?" - "+esc(e.com
 $("#qCli").oninput=drawCli;
 $("#hideDone").onchange=render;$("#reload").onclick=load;if(pw)start();
 </script><div id="newBanner" hidden><div><b id="nbText">NOVO PEDIDO!</b><button id="nbAck">OK, vi o pedido</button></div></div>
-<div id="printArea"></div><style id="pageStyle"></style><script src="admin-extra.js"></script><script src="admin-chat.js"></script></body></html>
+<div id="printArea"></div><style id="pageStyle"></style><script src="admin-extra.js"></script><script src="admin-chat.js"></script><script src="admin-kanban.js"></script></body></html>

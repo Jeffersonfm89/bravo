@@ -51,6 +51,7 @@ module.exports = async (req, res) => {
       if (!ORDER_STATUSES.includes(b.status)) throw bad('Status inválido');
       const o = await getOrder(String(b.id || '')); if (!o) return res.status(404).json({ error: 'Pedido não encontrado' });
       const was = o.status === 'Cancelado', now = b.status === 'Cancelado';
+      if (b.status === 'Entregue' && b.pagamentoFinal !== undefined) { if (!['Pix', 'Dinheiro', 'Máquina de cartão'].includes(b.pagamentoFinal)) throw bad('Forma de pagamento inválida'); o.pagamentoFinal = b.pagamentoFinal; }
       o.status = b.status; o.historico.push({ em: new Date().toISOString(), status: b.status });
       await saveOrder(o); if (was !== now) await touchCustomer(o, now ? -1 : +1).catch(() => {});
       const { pixQr, ...out } = o; return res.json(out);
