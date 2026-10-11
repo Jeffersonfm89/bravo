@@ -32,7 +32,7 @@ var PRODUCTS = [
       { id: "mussarela", name: "Queijo mussarela", price: 2.00 }, { id: "presunto", name: "Presunto", price: 2.00 }, { id: "calabresa", name: "Calabresa", price: 2.00 },
       { id: "bacon", name: "Bacon", price: 2.50 }, { id: "catupiry", name: "Catupiry", price: 2.00 }, { id: "requeijao", name: "Requeijão", price: 2.00 },
       { id: "tomate", name: "Tomate", price: 1.00 }, { id: "oregano", name: "Orégano", price: 0.50 }, { id: "milho", name: "Milho", price: 1.00 } ] }, addsGroup()] }, // preços por ingrediente PROVISÓRIOS
-  { id: "a-copo", ativo: false, cat: "Açaí", name: "Açaí no Copo", // DESATIVADO (ativo: false) — para reativar, apague "ativo: false"
+  { id: "a-copo", cat: "Açaí", name: "Açaí no Copo",
     desc: "Escolha o tamanho e os adicionais", price: 0, img: "img/acai.jpg",
     options: [
       { id: "tam", label: "Tamanho", type: "single", min: 1, max: 1, choices: [
