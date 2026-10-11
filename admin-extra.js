@@ -21,7 +21,7 @@
   q("#btnTestAlert").onclick = function () { unlockAudio(); startAlarm("TESTE DE ALERTA"); };
   // ---------- notificações + service worker
   var swReg = null;
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").then(function (r) { swReg = r; }).catch(function () {});
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js?v=20261010233009").then(function (r) { swReg = r; }).catch(function () {});
   function notify(title, body) {
     if (!("Notification" in window) || Notification.permission !== "granted") return;
     var opt = { body: body, icon: "img/logo.jpg", badge: "img/logo.jpg", tag: "bravo-pedido", renotify: true, requireInteraction: true, vibrate: [400, 150, 400] };
@@ -47,8 +47,11 @@
   // ---------- detecção de novos pedidos (chamado após cada atualização da lista)
   window.onOrders = function (orders) {
     var ids = orders.map(function (o) { return o.id; });
+    // só pedidos "liberados" contam: Pix pago, liberado manualmente, ou dinheiro/cartão
+    var ready = orders.filter(function (o) { return o.status !== "Cancelado" && (!/^Pix/.test(o.pagamento) || o.pago || o.liberadoManual); });
+    ids = ready.map(function (o) { return o.id; });
     if (seen === null) { seen = new Set(JSON.parse(LS.getItem("bravo_seen") || "null") || ids); }
-    var fresh = orders.filter(function (o) { return !seen.has(o.id) && o.status !== "Cancelado"; });
+    var fresh = ready.filter(function (o) { return !seen.has(o.id); });
     ids.forEach(function (id) { seen.add(id); }); LS.setItem("bravo_seen", JSON.stringify(Array.from(seen).slice(-500)));
     if (!fresh.length) return;
     pendingNew = pendingNew.concat(fresh);

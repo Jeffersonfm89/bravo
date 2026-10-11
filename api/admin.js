@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const { cors, body, fail, bad } = require('./_lib/common');
 const { getChat, saveChat, listChats, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings } = require('./_lib/store');
 const { ORDER_STATUSES, PASTEL_ADDS } = require('../products.js');
+const { refreshPix } = require('./pedido.js');
 function authed(req) {
   const want = process.env.ADMIN_PASSWORD || ''; const got = String(req.headers['x-admin-password'] || '');
   if (!want) return false;
@@ -15,7 +16,17 @@ module.exports = async (req, res) => {
   if (!authed(req)) { await new Promise(r => setTimeout(r, 800)); return res.status(401).json({ error: 'Senha incorreta' }); }
   try {
     const b = body(req); res.setHeader('Cache-Control', 'no-store');
-    if (b.action === 'list') return res.json({ orders: (await listOrders({ limit: 150 })).map(({ pixQr, ...o }) => o), statuses: ORDER_STATUSES });
+    if (b.action === 'list') {
+      const os = await listOrders({ limit: 150 });
+      // atualiza no Mercado Pago os Pix pendentes recentes (até 2h), caso o webhook não tenha chegado
+      await Promise.all(os.filter(o => o.pixId && !o.pago && o.status !== 'Cancelado' && Date.now() - new Date(o.criadoEm) < 2 * 3600e3).map(o => refreshPix(o).catch(() => {})));
+      return res.json({ orders: os.map(({ pixQr, ...o }) => o), statuses: ORDER_STATUSES });
+    }
+    if (b.action === 'liberar') {
+      const o = await getOrder(String(b.id || '')); if (!o) return res.status(404).json({ error: 'Pedido não encontrado' });
+      if (!o.liberadoManual) { o.liberadoManual = true; o.historico.push({ em: new Date().toISOString(), status: 'Liberado manualmente (Pix)' }); await saveOrder(o); }
+      const { pixQr, ...out } = o; return res.json(out);
+    }
     if (b.action === 'metrics') { // pedidos desde a data (para as métricas, calculadas no painel)
       const from = b.from && !isNaN(new Date(b.from)) ? b.from : null;
       const os = await listOrders({ limit: 5000, from });
@@ -51,6 +62,7 @@ module.exports = async (req, res) => {
       if (!ORDER_STATUSES.includes(b.status)) throw bad('Status inválido');
       const o = await getOrder(String(b.id || '')); if (!o) return res.status(404).json({ error: 'Pedido não encontrado' });
       const was = o.status === 'Cancelado', now = b.status === 'Cancelado';
+      if (!['Recebido', 'Cancelado'].includes(b.status) && /^Pix/.test(o.pagamento) && !o.pago && !o.liberadoManual) throw bad('Pix ainda não pago: aguarde a confirmação ou use "Liberar manualmente"');
       if (b.status === 'Entregue' && b.pagamentoFinal !== undefined) { if (!['Pix', 'Dinheiro', 'Máquina de cartão'].includes(b.pagamentoFinal)) throw bad('Forma de pagamento inválida'); o.pagamentoFinal = b.pagamentoFinal; }
       o.status = b.status; o.historico.push({ em: new Date().toISOString(), status: b.status });
       await saveOrder(o); if (was !== now) await touchCustomer(o, now ? -1 : +1).catch(() => {});
