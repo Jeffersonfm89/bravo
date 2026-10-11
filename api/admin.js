@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
     if (b.action === 'customers') return res.json({ customers: await listCustomers() });
     if (b.action === 'getSettings') return res.json(await getSettings());
     if (b.action === 'saveSettings') {
-      const s = await getSettings(), seen = new Set();
+      const s = await getSettings(), seen = new Set(), old = s.bairros;
       if (!Array.isArray(b.bairros) || b.bairros.length > 300) throw bad('Lista de bairros inválida');
       s.bairros = b.bairros.map(x => {
         const nome = String(x.nome || '').trim().slice(0, 60); if (!nome || seen.has(nome.toLowerCase())) return null; seen.add(nome.toLowerCase());
@@ -32,6 +32,8 @@ module.exports = async (req, res) => {
         if (taxa !== null && !(taxa >= 0 && taxa <= 500)) throw bad('Taxa inválida em ' + nome);
         return { nome, taxa, ativo: !!x.ativo };
       }).filter(Boolean);
+      // bairros não podem ser excluídos: os que faltarem na lista enviada são mantidos como estavam
+      s.bairros = s.bairros.concat(old.filter(x => !seen.has(x.nome.toLowerCase())));
       const pct = Number(String(b.mpPct ?? s.mpPct).replace(',', '.')); if (!(pct >= 0 && pct <= 20)) throw bad('% Mercado Pago inválido'); s.mpPct = pct;
       await saveSettings(s); return res.json(s);
     }

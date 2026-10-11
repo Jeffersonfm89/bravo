@@ -9,7 +9,7 @@
 <div class="wrap"><form id="login" class="view"><input type="password" id="pw" placeholder="Senha do painel" autocomplete="current-password"><button class="go">Entrar</button></form>
 <div id="panel" hidden><nav class="tabs" id="atabs"><button data-t="tPedidos" class="on">Pedidos</button><button data-t="tTaxas">Taxas de entrega</button><button data-t="tMet">Métricas</button><button data-t="tCli">Clientes</button></nav>
 <section id="tPedidos"><div id="filters"><label><input type="checkbox" id="hideDone" checked> Ocultar entregues/cancelados</label> <button id="reload" class="ghost" style="padding:6px 12px">Atualizar</button> <span id="upd" style="color:#777"></span></div><div id="list"></div></section>
-<section id="tTaxas" hidden><p class="cust">Bairros sem taxa aparecem para o cliente como "taxa a combinar". Desmarque "Atende" para esconder o bairro.</p>
+<section id="tTaxas" hidden><p class="cust">Bairros sem taxa aparecem para o cliente como "taxa a combinar". Para desativar um bairro, desmarque "Atende (desmarque para desativar)" — a taxa fica salva. Bairros não podem ser excluídos.</p>
 <div class="row2"><input id="newB" placeholder="Novo bairro"><button id="addB" class="ghost" style="padding:8px 12px">Adicionar</button></div>
 <table class="bd" id="tblB"></table><label class="cust">Taxa Mercado Pago no Pix (estimativa quando o MP não informa) %: <input id="mpPct" style="width:80px"></label>
 <button id="saveB" class="go">Salvar taxas</button></section>
@@ -39,9 +39,8 @@ $("#atabs").onclick=e=>{const t=e.target.dataset.t;if(!t)return;document.querySe
 /* ---- taxas ---- */
 let B=[];
 async function loadB(){const s=await call({action:"getSettings"});B=s.bairros;$("#mpPct").value=String(s.mpPct).replace(".",",");drawB()}
-function drawB(){$("#tblB").innerHTML="<tr><td><b>Bairro</b></td><td><b>Taxa R$</b></td><td><b>Atende</b></td><td></td></tr>"+B.map((b,i)=>`<tr><td>${esc(b.nome)}</td><td><input data-i="${i}" data-f="taxa" inputmode="decimal" placeholder="a combinar" value="${b.taxa==null?"":String(b.taxa.toFixed(2)).replace(".",",")}"></td><td><input type="checkbox" data-i="${i}" data-f="ativo" ${b.ativo?"checked":""} style="width:22px;height:22px"></td><td><button class="rm" data-del="${i}">remover</button></td></tr>`).join("")}
+function drawB(){$("#tblB").innerHTML="<tr><td><b>Bairro</b></td><td><b>Taxa R$</b></td><td><b>Atende</b><br><small class="est">desmarque para desativar</small></td></tr>"+B.map((b,i)=>`<tr><td>${esc(b.nome)}</td><td><input data-i="${i}" data-f="taxa" inputmode="decimal" placeholder="a combinar" value="${b.taxa==null?"":String(b.taxa.toFixed(2)).replace(".",",")}"></td><td><input type="checkbox" data-i="${i}" data-f="ativo" ${b.ativo?"checked":""} style="width:22px;height:22px"></td></tr>`).join("")}
 $("#tblB").oninput=$("#tblB").onchange=e=>{const i=e.target.dataset.i;if(i==null)return;if(e.target.dataset.f=="ativo")B[i].ativo=e.target.checked;else{const v=e.target.value.trim();B[i].taxa=v===""?null:v}};
-$("#tblB").onclick=e=>{const i=e.target.dataset.del;if(i!=null&&confirm("Remover "+B[i].nome+"?")){B.splice(i,1);drawB()}};
 $("#addB").onclick=()=>{const n=$("#newB").value.trim();if(n){B.unshift({nome:n,taxa:null,ativo:true});$("#newB").value="";drawB()}};
 $("#saveB").onclick=async()=>{try{const s=await call({action:"saveSettings",bairros:B,mpPct:$("#mpPct").value});B=s.bairros;drawB();alert("Taxas salvas!")}catch(e){alert(e.message)}};
 /* ---- métricas ---- */
