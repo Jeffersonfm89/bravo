@@ -57,7 +57,7 @@ function deliveryFee(tipo) { return tipo === 'Retirada' ? 0 : DELIVERY_FEE; }
 var ORDER_STATUSES = ['Recebido', 'Aceito', 'Em produção', 'Saiu para entrega', 'Pronto para retirada', 'Entregue', 'Cancelado'];
 function brlFmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
 /* Monta itens + subtotal + taxa + total (mesma regra no site e no servidor). */
-function buildBreakdown(cartPairs, tipo) {
+function buildBreakdown(cartPairs, tipo, fee) {
   var itens = [], subtotal = 0;
   cartPairs.forEach(function (c) {
     var p = PRODUCTS.find(function (x) { return x.id === c.id; }); var q = Math.floor(Number(c.qty));
@@ -67,7 +67,7 @@ function buildBreakdown(cartPairs, tipo) {
     itens.push({ id: p.id, name: p.name, detalhe: pr.detalhe, opts: pr.opts, qty: q, unit: pr.unit, subtotal: s });
   });
   subtotal = Math.round(subtotal * 100) / 100;
-  var fee = deliveryFee(tipo);
+  if (tipo === 'Retirada') fee = 0; else if (fee === undefined) fee = deliveryFee(tipo);
   return { itens: itens, subtotal: subtotal, taxaEntrega: fee, total: Math.round((subtotal + (fee || 0)) * 100) / 100 };
 }
 function feeLabel(fee) { return fee === null || fee === undefined ? 'a combinar' : brlFmt(fee); }

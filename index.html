@@ -13,7 +13,9 @@
 <form id="checkout"><h3>Seus dados</h3>
 <input name="nome" placeholder="Nome" required><input name="tel" type="tel" placeholder="Telefone / WhatsApp" required><input name="email" type="email" placeholder="E-mail (opcional, para o comprovante Pix)">
 <label class="r"><input type="radio" name="tipo" value="Entrega" checked> Entrega</label><label class="r"><input type="radio" name="tipo" value="Retirada"> Retirada no local</label>
-<input name="end" id="end" placeholder="Endereço completo" required>
+<div id="addr" class="view"><select name="bairro" id="bairro" required><option value="">Carregando bairros…</option></select>
+<input name="rua" placeholder="Rua" required><div class="row2"><input name="numero" placeholder="Número" required inputmode="numeric"><input name="complemento" placeholder="Complemento (apto, bloco…)"></div>
+<input name="referencia" placeholder="Ponto de referência"><small id="feeInfo" class="cust"></small></div>
 <select name="pag"><option>Pix</option><option>Cartão</option><option>Dinheiro na entrega</option></select>
 <textarea name="obs" placeholder="Observações (ex.: troco para R$ 50, sem cebola)"></textarea>
 <button type="submit" class="go">Revisar pedido</button></form></section>
@@ -24,4 +26,4 @@
 <button id="sendWa" class="go">Enviar pedido no WhatsApp</button><a class="ghost trackLink">Acompanhar pedido</a>
 <details><summary>Ver / copiar texto do pedido</summary><textarea id="sumText" readonly></textarea><button id="copy" class="ghost">Copiar pedido</button></details></section>
 </aside><div id="optModal" class="modal" hidden><div class="mbox"><div class="dh"><h2 id="mTitle"></h2><button id="mClose">✕</button></div><p id="mDesc" class="cust"></p><div id="mBody"></div><button id="mAdd" class="go">Adicionar</button></div></div>
-<div id="toast"></div><script src="products.js"></script><script src="app-config.js"></script><script src="app.js"></script></body></html>
+<div id="toast"></div><script src="products.js"></script><script src="bairros.js"></script><script src="app-config.js"></script><script src="app.js"></script></body></html>

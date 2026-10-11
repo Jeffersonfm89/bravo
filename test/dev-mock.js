@@ -10,7 +10,7 @@ const http=require('http'),fs=require('fs'),path=require('path'),url=require('ur
 const calls=[];let st='pending',lastAmt,lastRef;
 global.fetch=async(u,o={})=>{calls.push({u,method:o.method||'GET',headers:o.headers,body:o.body&&JSON.parse(o.body)});
  if(u.endsWith('/v1/payments')){const b=JSON.parse(o.body);lastAmt=b.transaction_amount;lastRef=b.external_reference;return{ok:true,json:async()=>({id:123456,status:'pending',transaction_amount:b.transaction_amount,point_of_interaction:{transaction_data:{qr_code:'00020126PIXMOCK',qr_code_base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='}}})}}
- return{ok:true,json:async()=>({id:123456,status:st,transaction_amount:lastAmt,external_reference:lastRef})}};
+ return{ok:true,json:async()=>({id:123456,status:st,transaction_amount:lastAmt,external_reference:lastRef,fee_details:[{amount:0.05}]})}};
 const root=path.join(__dirname,'..');
 http.createServer(async(req,res)=>{const p=url.parse(req.url,true);
  if(p.pathname=='/__approve'){st='approved';return res.end('ok')}

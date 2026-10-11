@@ -33,7 +33,12 @@ if(d.id){const p=PRODUCTS.find(x=>x.id==d.id);p.options?openOpts(p):addToCart(p.
 if(d.inc){cart[d.inc].qty++;save()} if(d.dec){if(--cart[d.dec].qty<=0)delete cart[d.dec];save()} if(d.rm){delete cart[d.rm];save()}
 if(d.cat){cat=d.cat;document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b==e.target));grid()}});
 $("#cartBtn").onclick=()=>openCart(true);$("#closeCart").onclick=$("#overlay").onclick=()=>openCart(false);
-document.querySelectorAll("[name=tipo]").forEach(r=>r.onchange=()=>{const ent=$("[name=tipo]:checked").value=="Entrega";$("#end").hidden=!ent;$("#end").required=ent});
+document.querySelectorAll("[name=tipo]").forEach(r=>r.onchange=()=>{const ent=$("[name=tipo]:checked").value=="Entrega";$("#addr").hidden=!ent;$("#addr").querySelectorAll("[required],[data-req]").forEach(i=>{i.dataset.req=1;i.required=ent})});
+/* ---- Bairros e taxas (do servidor) ---- */
+let BAIRROS=[];const feeOf=n=>{const b=BAIRROS.find(x=>x.nome==n);return b?b.taxa:undefined};
+async function loadBairros(){try{if(API===null)throw 0;const d=await(await fetch(API+"/api/config")).json();BAIRROS=d.bairros||[]}catch(e){BAIRROS=DEFAULT_BAIRROS.map(nome=>({nome,taxa:null}))}
+$("#bairro").innerHTML='<option value="">Selecione o bairro</option>'+BAIRROS.map(b=>`<option value="${esc(b.nome)}">${esc(b.nome)} — ${b.taxa==null?"taxa a combinar":"entrega "+brl(b.taxa)}</option>`).join("")}
+$("#bairro").onchange=()=>{const f=feeOf($("#bairro").value);$("#feeInfo").textContent=f===undefined?"":"Taxa de entrega: "+feeLabel(f)};loadBairros();
 /* ---- Checkout: dados → revisão → confirmação ---- */
 function view(v){["vCart","vReview","vPix","vDone"].forEach(x=>$("#"+x).hidden=x!=v);$("#dTitle").textContent={vCart:"Seu carrinho",vReview:"Revisão",vPix:"Pagamento",vDone:"Pedido"}[v]}
 function breakdownHTML(o){return `<table class="bd">${o.itens.map(i=>`<tr><td>${i.qty}x ${esc(i.name)}${i.detalhe?`<br><small class="det">${esc(i.detalhe)}</small>`:""}<br><small>${brlFmt(i.unit)} cada</small></td><td class="n">${brlFmt(i.subtotal)}</td></tr>`).join("")}
@@ -43,8 +48,10 @@ function custHTML(c,pag){return `<div class="cust"><b>${esc(c.nome)}</b> · ${es
 const trackURL=id=>(SITE_URL||location.origin+location.pathname.replace(/[^/]*$/,""))+"pedido.html?id="+id;
 let draft=null,poll;
 $("#checkout").onsubmit=e=>{e.preventDefault();if(!Object.keys(cart).length){toast("Carrinho vazio");return}
-const f=new FormData(e.target),cliente={nome:f.get("nome"),tel:f.get("tel"),email:f.get("email"),tipo:f.get("tipo"),end:f.get("tipo")=="Entrega"?f.get("end"):"",obs:f.get("obs")};
-let br;try{br=buildBreakdown(Object.values(cart).map(c=>({id:c.id,qty:c.qty,opts:c.opts})),cliente.tipo)}catch(err){toast(err.message);return}
+const f=new FormData(e.target),ent=f.get("tipo")=="Entrega",cliente={nome:f.get("nome"),tel:f.get("tel"),email:f.get("email"),tipo:f.get("tipo"),obs:f.get("obs")};
+if(ent){Object.assign(cliente,{bairro:f.get("bairro"),rua:f.get("rua"),numero:f.get("numero"),complemento:f.get("complemento"),referencia:f.get("referencia")});
+cliente.end=`${cliente.rua}, ${cliente.numero}${cliente.complemento?" - "+cliente.complemento:""} - ${cliente.bairro}, Joinville${cliente.referencia?" (Ref.: "+cliente.referencia+")":""}`}
+let br;try{br=buildBreakdown(Object.values(cart).map(c=>({id:c.id,qty:c.qty,opts:c.opts})),cliente.tipo,ent?feeOf(cliente.bairro)??null:0)}catch(err){toast(err.message);return}
 draft={...br,cliente,pagamento:f.get("pag")};$("#reviewBox").innerHTML=breakdownHTML(draft)+custHTML(cliente,draft.pagamento);view("vReview")};
 $("#back").onclick=()=>view("vCart");
 $("#confirm").onclick=async()=>{const api=apiBase(),btn=$("#confirm");

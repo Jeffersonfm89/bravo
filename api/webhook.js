@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { mp, body, fail } = require('./_lib/common');
 const { getOrder, saveOrder } = require('./_lib/store');
+const { markPaid } = require('./_lib/paid');
 // Valida a assinatura x-signature se MP_WEBHOOK_SECRET estiver configurado (Mercado Pago > Webhooks > assinatura secreta).
 function validSig(req, dataId) {
   const secret = process.env.MP_WEBHOOK_SECRET; if (!secret) return true;
@@ -23,7 +24,7 @@ module.exports = async (req, res) => {
     if (p.status === 'approved') {
       const o = p.external_reference && await getOrder(p.external_reference);
       if (o && !o.pago && Math.abs(Number(p.transaction_amount) - o.total) < 0.01) {
-        o.pago = true; o.pixStatus = 'approved'; o.pagoEm = new Date().toISOString(); o.historico.push({ em: o.pagoEm, status: 'Pago (Pix)' });
+        o.pixStatus = 'approved'; markPaid(o, p);
         await saveOrder(o);
       }
       console.log('PEDIDO PAGO', p.external_reference, p.id, p.transaction_amount);
