@@ -10,7 +10,7 @@ var PASTEL_ADDS = [
 function addsGroup() { return { id: "add", label: "Adicionais", type: "multi", min: 0, max: PASTEL_ADDS.length, choices: PASTEL_ADDS }; }
 function semGroup(ings) { return { id: "sem", label: "Tirar algo", type: "multi", min: 0, max: ings.length, choices: ings.map(function (n) { return { id: n.toLowerCase().normalize("NFD").replace(/[^a-z]/g, ""), name: "Sem " + n, price: 0 }; }) }; }
 // ings = ingredientes do próprio pastel (viram as opções de "Tirar algo")
-function pastel(id, name, desc, price, ings) { return { id: id, cat: "Pastéis", name: name, desc: desc, price: price, img: PASTEL_IMG, nota: true, options: [semGroup(ings), addsGroup()] }; }
+function pastel(id, name, desc, price, ings) { return { id: id, cat: "Pastéis", name: name, desc: desc, price: price, img: "img/" + id + ".jpg", nota: true, options: [semGroup(ings), addsGroup()] }; }
 /* Aplica preços de adicionais salvos no painel: { calabresa: 8, ... } */
 function applyAddPrices(map) { if (!map) return; PASTEL_ADDS.forEach(function (a) { var v = Number(map[a.id]); if (map[a.id] != null && v >= 0 && v <= 100) a.price = Math.round(v * 100) / 100; }); }
 var PRODUCTS = [
@@ -26,7 +26,7 @@ var PRODUCTS = [
   pastel("p-bacon", "Pastel de Bacon", "Bacon", 10.00, ["Bacon"]),                                           // PROVISÓRIO
   pastel("p-bacon-catupiry", "Pastel de Bacon com Catupiry", "Bacon e Catupiry", 12.00, ["Bacon", "Catupiry"]),          // PROVISÓRIO
   pastel("p-bacon-requeijao", "Pastel de Bacon com Requeijão", "Bacon e requeijão", 12.00, ["Bacon", "Requeijão"]),       // PROVISÓRIO
-  { id: "p-personalizado", cat: "Pastéis", name: "Pastel Personalizado", desc: "Monte do seu jeito: escolha os ingredientes", price: 6.00, img: PASTEL_IMG, nota: true, // base PROVISÓRIA
+  { id: "p-personalizado", cat: "Pastéis", name: "Pastel Personalizado", desc: "Monte do seu jeito: escolha os ingredientes", price: 6.00, img: "img/p-personalizado.jpg", nota: true, // base PROVISÓRIA
     options: [{ id: "ing", label: "Ingredientes", type: "multi", min: 1, max: 6, choices: [
       { id: "frango", name: "Frango", price: 2.00 }, { id: "carne", name: "Carne", price: 2.00 }, { id: "ovo", name: "Ovo", price: 1.50 },
       { id: "mussarela", name: "Queijo mussarela", price: 2.00 }, { id: "presunto", name: "Presunto", price: 2.00 }, { id: "calabresa", name: "Calabresa", price: 2.00 },
