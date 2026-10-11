@@ -2,26 +2,41 @@
 // Configurações (WhatsApp, API, link) ficam em app-config.js
 // Os produtos e preços ficam em products.js
 /* ====================================== */
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 const $=s=>document.querySelector(s),brl=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-let cart=JSON.parse(localStorage.getItem("bravoCart")||"{}");let cat="all";
-const save=()=>{localStorage.setItem("bravoCart",JSON.stringify(cart));render()};
-function grid(){$("#grid").innerHTML=PRODUCTS.filter(p=>cat=="all"||p.cat==cat).map(p=>`<div class="card"><img src="${p.img}" alt="${p.name}" loading="lazy"><div class="b"><h3>${p.name}</h3><small>${p.desc}</small><div class="p">${brl(p.price)}</div><button class="add" data-id="${p.id}">Adicionar</button></div></div>`).join("")}
-function total(){return Object.entries(cart).reduce((s,[id,q])=>s+(PRODUCTS.find(p=>p.id==id)?.price||0)*q,0)}
-function render(){const n=Object.values(cart).reduce((a,b)=>a+b,0);$("#count").textContent=n;
-$("#items").innerHTML=n?Object.entries(cart).map(([id,q])=>{const p=PRODUCTS.find(x=>x.id==id);if(!p)return"";return`<div class="it"><img src="${p.img}" alt=""><div class="n">${p.name}<br><b>${brl(p.price*q)}</b><br><button class="rm" data-rm="${id}">Remover</button></div><div class="q"><button data-dec="${id}">−</button><span>${q}</span><button data-inc="${id}">+</button></div></div>`}).join(""):"<p>Seu carrinho está vazio.</p>";
+localStorage.removeItem("bravoCart");
+let cart=JSON.parse(localStorage.getItem("bravoCart2")||"{}");let cat="all";
+// limpa itens que não existem mais no cardápio
+for(const k in cart){try{priceItem(PRODUCTS.find(p=>p.id==cart[k].id),cart[k].opts)}catch(e){delete cart[k]}}
+const save=()=>{localStorage.setItem("bravoCart2",JSON.stringify(cart));render()};
+const fromPrice=p=>p.price+(p.options||[]).reduce((s,g)=>s+(g.min?g.choices.map(c=>c.price).sort((a,b)=>a-b).slice(0,g.min).reduce((a,b)=>a+b,0):0),0);
+function grid(){$("#grid").innerHTML=PRODUCTS.filter(p=>cat=="all"||p.cat==cat).map(p=>`<div class="card"><img src="${p.img}" alt="${p.name}" loading="lazy"><div class="b"><h3>${p.name}</h3><small>${p.desc}</small><div class="p">${p.options?"a partir de ":""}${brl(fromPrice(p))}</div><button class="add" data-id="${p.id}">${p.options?"Escolher":"Adicionar"}</button></div></div>`).join("")}
+function lines(){return Object.entries(cart).map(([k,c])=>{const p=PRODUCTS.find(x=>x.id==c.id),pr=priceItem(p,c.opts);return{k,p,qty:c.qty,...pr}})}
+function total(){return lines().reduce((s,l)=>s+l.unit*l.qty,0)}
+function addToCart(id,opts){const pr=priceItem(PRODUCTS.find(p=>p.id==id),opts),k=id+"|"+JSON.stringify(pr.opts);cart[k]=cart[k]||{id,opts:pr.opts,qty:0};cart[k].qty++;save();toast("Adicionado ao carrinho!")}
+function render(){const L=lines(),n=L.reduce((a,l)=>a+l.qty,0);$("#count").textContent=n;
+$("#items").innerHTML=n?L.map(l=>`<div class="it"><img src="${l.p.img}" alt=""><div class="n">${l.p.name}${l.detalhe?`<br><small class="det">${esc(l.detalhe)}</small>`:""}<br><b>${brl(l.unit*l.qty)}</b><br><button class="rm" data-rm="${esc(l.k)}">Remover</button></div><div class="q"><button data-dec="${esc(l.k)}">−</button><span>${l.qty}</span><button data-inc="${esc(l.k)}">+</button></div></div>`).join(""):"<p>Seu carrinho está vazio.</p>";
 $("#total").textContent=brl(total());if(!n&&!$("#vReview").hidden)view("vCart")}
+/* ---- Modal de opções ---- */
+let mp=null;
+function openOpts(p){mp=p;$("#mTitle").textContent=p.name;$("#mDesc").textContent=p.desc;
+$("#mBody").innerHTML=p.options.map(g=>`<fieldset><legend>${g.label}${g.type=="single"?" (escolha 1)":g.min?` (mín. ${g.min}, máx. ${g.max})`:" (opcional)"}</legend>${g.choices.map((c,i)=>`<label class="opt"><input type="${g.type=="single"?"radio":"checkbox"}" name="g_${g.id}" value="${c.id}" ${g.type=="single"&&i==0?"checked":""}> <span>${c.name}</span><b>${c.price?(g.type=="single"&&!p.price?"":"+ ")+brl(c.price):""}</b></label>`).join("")}</fieldset>`).join("");
+updOpts();$("#optModal").hidden=false}
+function readOpts(){const o={};mp.options.forEach(g=>o[g.id]=[...document.querySelectorAll(`[name=g_${g.id}]:checked`)].map(x=>x.value));return o}
+function updOpts(){try{const pr=priceItem(mp,readOpts());$("#mAdd").disabled=false;$("#mAdd").textContent="Adicionar · "+brl(pr.unit)}catch(e){$("#mAdd").disabled=true;$("#mAdd").textContent=e.message}}
+$("#mBody").onchange=e=>{const g=mp.options.find(g=>"g_"+g.id==e.target.name);if(g&&g.type=="multi"&&e.target.checked&&readOpts()[g.id].length>g.max){e.target.checked=false;toast("Máximo de "+g.max)}updOpts()};
+$("#mAdd").onclick=()=>{addToCart(mp.id,readOpts());$("#optModal").hidden=true};$("#mClose").onclick=()=>$("#optModal").hidden=true;
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("s");setTimeout(()=>e.classList.remove("s"),1400)}
 function openCart(o){$("#drawer").classList.toggle("open",o);$("#overlay").hidden=!o;if(o&&!$("#vDone").hidden&&Object.keys(cart).length)view("vCart")}
 document.addEventListener("click",e=>{const d=e.target.dataset;
-if(d.id){cart[d.id]=(cart[d.id]||0)+1;save();toast("Adicionado ao carrinho!")}
-if(d.inc){cart[d.inc]++;save()} if(d.dec){if(--cart[d.dec]<=0)delete cart[d.dec];save()} if(d.rm){delete cart[d.rm];save()}
+if(d.id){const p=PRODUCTS.find(x=>x.id==d.id);p.options?openOpts(p):addToCart(p.id,{})}
+if(d.inc){cart[d.inc].qty++;save()} if(d.dec){if(--cart[d.dec].qty<=0)delete cart[d.dec];save()} if(d.rm){delete cart[d.rm];save()}
 if(d.cat){cat=d.cat;document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b==e.target));grid()}});
 $("#cartBtn").onclick=()=>openCart(true);$("#closeCart").onclick=$("#overlay").onclick=()=>openCart(false);
 document.querySelectorAll("[name=tipo]").forEach(r=>r.onchange=()=>{const ent=$("[name=tipo]:checked").value=="Entrega";$("#end").hidden=!ent;$("#end").required=ent});
 /* ---- Checkout: dados → revisão → confirmação ---- */
 function view(v){["vCart","vReview","vPix","vDone"].forEach(x=>$("#"+x).hidden=x!=v);$("#dTitle").textContent={vCart:"Seu carrinho",vReview:"Revisão",vPix:"Pagamento",vDone:"Pedido"}[v]}
-function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
-function breakdownHTML(o){return `<table class="bd">${o.itens.map(i=>`<tr><td>${i.qty}x ${esc(i.name)}<br><small>${brlFmt(i.unit)} cada</small></td><td class="n">${brlFmt(i.subtotal)}</td></tr>`).join("")}
+function breakdownHTML(o){return `<table class="bd">${o.itens.map(i=>`<tr><td>${i.qty}x ${esc(i.name)}${i.detalhe?`<br><small class="det">${esc(i.detalhe)}</small>`:""}<br><small>${brlFmt(i.unit)} cada</small></td><td class="n">${brlFmt(i.subtotal)}</td></tr>`).join("")}
 <tr class="s"><td>Subtotal</td><td class="n">${brlFmt(o.subtotal)}</td></tr><tr class="s"><td>Taxa de entrega</td><td class="n">${feeLabel(o.taxaEntrega)}</td></tr>
 <tr class="t"><td>Total</td><td class="n">${brlFmt(o.total)}${o.taxaEntrega==null?" + entrega":""}</td></tr></table>`}
 function custHTML(c,pag){return `<div class="cust"><b>${esc(c.nome)}</b> · ${esc(c.tel)}<br>${c.tipo=="Retirada"?"Retirada no local":"Entrega: "+esc(c.end)}<br>Pagamento: ${esc(pag)}${c.obs?"<br>Obs.: "+esc(c.obs):""}</div>`}
@@ -29,13 +44,13 @@ const trackURL=id=>(SITE_URL||location.origin+location.pathname.replace(/[^/]*$/
 let draft=null,poll;
 $("#checkout").onsubmit=e=>{e.preventDefault();if(!Object.keys(cart).length){toast("Carrinho vazio");return}
 const f=new FormData(e.target),cliente={nome:f.get("nome"),tel:f.get("tel"),email:f.get("email"),tipo:f.get("tipo"),end:f.get("tipo")=="Entrega"?f.get("end"):"",obs:f.get("obs")};
-let br;try{br=buildBreakdown(Object.entries(cart).map(([id,qty])=>({id,qty})),cliente.tipo)}catch(err){toast(err.message);return}
+let br;try{br=buildBreakdown(Object.values(cart).map(c=>({id:c.id,qty:c.qty,opts:c.opts})),cliente.tipo)}catch(err){toast(err.message);return}
 draft={...br,cliente,pagamento:f.get("pag")};$("#reviewBox").innerHTML=breakdownHTML(draft)+custHTML(cliente,draft.pagamento);view("vReview")};
 $("#back").onclick=()=>view("vCart");
 $("#confirm").onclick=async()=>{const api=apiBase(),btn=$("#confirm");
 if(api===null){showDone({...draft,id:""},false);return}
 btn.disabled=true;btn.textContent="Enviando…";
-try{const r=await fetch(api+"/api/pedido",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:draft.itens.map(i=>({id:i.id,qty:i.qty})),cliente:draft.cliente,pagamento:draft.pagamento})});
+try{const r=await fetch(api+"/api/pedido",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:draft.itens.map(i=>({id:i.id,qty:i.qty,opts:i.opts})),cliente:draft.cliente,pagamento:draft.pagamento})});
 const o=await r.json();if(!r.ok)throw new Error(o.error||"Falha ao enviar pedido");
 cart={};save();document.querySelectorAll(".oid").forEach(x=>x.textContent=o.id);document.querySelectorAll(".trackLink").forEach(a=>a.href=trackURL(o.id));
 if(o.pixErro)toast("Pix automático indisponível: combine o Pix pelo WhatsApp");

@@ -12,7 +12,7 @@ async function load(){try{const r=await fetch(API+"/api/pedido?id="+encodeURICom
 const flow=o.status=="Cancelado"?["Recebido","Cancelado"]:["Recebido","Aceito","Em produção",o.cliente.tipo=="Retirada"?"Pronto para retirada":"Saiu para entrega","Entregue"];const k=flow.indexOf(o.status);
 $("#out").innerHTML=`<p>Pedido nº <b>${esc(o.id)}</b></p><p class="big">${esc(o.status)}</p>${o.pago?'<p class="paid">✅ Pago via Pix</p>':(o.pagamento=="Pix"&&o.pix?'<p>Pagamento Pix pendente. <a href="#" id="cp" style="color:#f5b400">Copiar código Pix</a></p>':"")}
 <ul class="steps">${flow.map((s,i)=>`<li class="${i<k?"done":i==k?"done cur":""}">${s}</li>`).join("")}</ul><hr style="border-color:#222">
-<table class="bd">${o.itens.map(i=>`<tr><td>${i.qty}x ${esc(i.name)}<br><small>${brlFmt(i.unit)} cada</small></td><td class="n">${brlFmt(i.subtotal)}</td></tr>`).join("")}
+<table class="bd">${o.itens.map(i=>`<tr><td>${i.qty}x ${esc(i.name)}${i.detalhe?`<br><small class="det">${esc(i.detalhe)}</small>`:""}<br><small>${brlFmt(i.unit)} cada</small></td><td class="n">${brlFmt(i.subtotal)}</td></tr>`).join("")}
 <tr class="s"><td>Subtotal</td><td class="n">${brlFmt(o.subtotal)}</td></tr><tr class="s"><td>Taxa de entrega</td><td class="n">${feeLabel(o.taxaEntrega)}</td></tr><tr class="t"><td>Total</td><td class="n">${brlFmt(o.total)}${o.taxaEntrega==null?" + entrega":""}</td></tr></table>
 <p class="cust">${o.cliente.tipo=="Retirada"?"Retirada no local":"Entrega: "+esc(o.cliente.end)}<br>Pagamento: ${esc(o.pagamento)}</p>`;
 const cp=$("#cp");if(cp)cp.onclick=e=>{e.preventDefault();navigator.clipboard?.writeText(o.pix.qr_code);cp.textContent="Copiado!"};
