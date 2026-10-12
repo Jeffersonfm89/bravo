@@ -42,4 +42,13 @@
   window.onChats = function (chats) { byId = {}; chats.forEach(function (c) { byId[c.id] = c; if (!c.fechado && c.unreadAdmin > 0 && !st[c.id]) st[c.id] = "bubble"; });
     Object.keys(st).forEach(function (id) { if (!byId[id] || (byId[id].fechado && st[id] !== "open")) delete st[id]; }); save(); draw(); };
   window.openChatBubble = open;
+  // sininho discreto no canto superior direito
+  var bell = document.createElement("button"); bell.id = "chatBell"; bell.title = "Mensagens não lidas"; bell.innerHTML = '🔔<span class="bn" hidden></span>'; bell.hidden = true; document.body.appendChild(bell);
+  css.textContent += "#chatBell{position:fixed;top:12px;right:12px;z-index:9002;width:40px;height:40px;border-radius:50%;border:1px solid #f5b40088;background:#1a1a1a;font-size:18px;cursor:pointer}#chatBell .bn{position:absolute;top:-5px;right:-5px;background:#e53935;color:#fff;border-radius:999px;min-width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;padding:0 4px}#chatBell .bn[hidden],#chatBell[hidden]{display:none}body>header{padding-right:64px!important}";
+  bell.onclick = function () { var c = Object.keys(byId).map(function (k) { return byId[k]; }).find(function (x) { return x.unreadAdmin && !x.fechado; });
+    if (c) open(c.id); else { var t = document.querySelector('[data-t=tChat]'); if (t) t.click(); } };
+  var oc = window.onChats; window.onChats = function (chats) { oc(chats); var un = chats.reduce(function (s, c) { return s + (c.fechado ? 0 : c.unreadAdmin); }, 0), n = bell.querySelector(".bn"); n.hidden = !un; n.textContent = un; bell.hidden = false; };
+  var ac; window.chatDing = function () { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); var o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
+    o.type = "sine"; o.frequency.setValueAtTime(1046, t); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + 0.65); } catch (_) {} };
 })();
