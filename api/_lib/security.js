@@ -16,7 +16,9 @@ async function readLog(days = 7) {
 }
 // ---- login do painel: 5 erros por IP em 15 min => bloqueio de 15 min
 const LOGIN_MAX = 5, LOGIN_WIN = 15 * 60e3, LOGIN_BLOCK = 15 * 60e3;
-const lkey = ip => `security/login/${h(ip)}.json`;
+// agrupa por faixa de rede (IPv4 /24, IPv6 /64) para quem troca de IP na mesma rede não escapar do bloqueio
+const net = ip => ip.includes(':') ? ip.split(':').slice(0, 4).join(':') : ip.split('.').slice(0, 3).join('.');
+const lkey = ip => `security/login/${h(net(ip))}.json`;
 async function loginBlocked(ip) { const r = await getJSON(lkey(ip)).catch(() => null); return r && r.bloqueadoAte && r.bloqueadoAte > Date.now() ? r.bloqueadoAte : 0; }
 async function loginFail(ip) {
   const r = (await getJSON(lkey(ip)).catch(() => null)) || {}; const now = Date.now();
