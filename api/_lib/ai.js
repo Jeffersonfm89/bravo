@@ -26,7 +26,8 @@ ${order ? `Pedido ligado a esta conversa: nº ${order.id}, status "${order.statu
 }
 // Retorna {txt, handoff} ou null (não responde).
 async function aiReply(chat, st, order) {
-  if (st.aiAuto === false || chat.humano || !process.env.AI_API_KEY) return null;
+  if (st.aiAuto === false || !process.env.AI_API_KEY) return { txt: ACK, auto: true }; // IA desligada: só aviso automático, nenhuma chamada à OpenAI
+  if (chat.humano) return null;
   const last = chat.msgs.filter(m => m.de === 'cliente').slice(-1)[0];
   if (last && HUMAN_RE.test(last.txt)) return { txt: HANDOFF_MSG, handoff: true };
   const day = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
