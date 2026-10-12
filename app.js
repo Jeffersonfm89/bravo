@@ -49,7 +49,8 @@ const trackURL=id=>(SITE_URL||location.origin+location.pathname.replace(/[^/]*$/
 let draft=null,poll;
 $("#checkout").onsubmit=e=>{e.preventDefault();if(!Object.keys(cart).length){toast("Carrinho vazio");return}
 const f=new FormData(e.target),ent=f.get("tipo")=="Entrega",cliente={nome:f.get("nome"),tel:f.get("tel"),email:f.get("email"),tipo:f.get("tipo"),obs:f.get("obs")};
-if(ent){Object.assign(cliente,{bairro:f.get("bairro"),rua:f.get("rua"),numero:f.get("numero"),complemento:f.get("complemento"),referencia:f.get("referencia")});
+if(ent&&window.meRef){Object.assign(cliente,{bairro:meRef.bairro,addressRef:meRef.addressRef,end:meRef.masked+", Joinville"})}
+else if(ent){Object.assign(cliente,{bairro:f.get("bairro"),rua:f.get("rua"),numero:f.get("numero"),complemento:f.get("complemento"),referencia:f.get("referencia")});
 cliente.end=`${cliente.rua}, ${cliente.numero}${cliente.complemento?" - "+cliente.complemento:""} - ${cliente.bairro}, Joinville${cliente.referencia?" (Ref.: "+cliente.referencia+")":""}`}
 let br;try{br=buildBreakdown(Object.values(cart).map(c=>({id:c.id,qty:c.qty,opts:c.opts,nota:c.nota})),cliente.tipo,ent?feeOf(cliente.bairro)??null:0)}catch(err){toast(err.message);return}
 draft={...br,cliente,pagamento:f.get("pag")};$("#reviewBox").innerHTML=breakdownHTML(draft)+custHTML(cliente,draft.pagamento);view("vReview")};
@@ -59,7 +60,7 @@ if(api===null){showDone({...draft,id:""},false);return}
 btn.disabled=true;btn.textContent="Enviando…";
 try{const r=await fetch(api+"/api/pedido",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:draft.itens.map(i=>({id:i.id,qty:i.qty,opts:i.opts,nota:i.nota})),cliente:draft.cliente,pagamento:draft.pagamento})});
 const o=await r.json();if(!r.ok)throw new Error(o.error||"Falha ao enviar pedido");
-cart={};save();localStorage.setItem("bravoLastOrder",o.id);document.querySelectorAll(".oid").forEach(x=>x.textContent=o.id);document.querySelectorAll(".trackLink").forEach(a=>a.href=trackURL(o.id));
+cart={};save();localStorage.setItem("bravoLastOrder",o.id);try{window.meSave&&meSave(draft.cliente)}catch(_){}document.querySelectorAll(".oid").forEach(x=>x.textContent=o.id);document.querySelectorAll(".trackLink").forEach(a=>a.href=trackURL(o.id));
 if(o.pixErro)toast("Pix automático indisponível: combine o Pix pelo WhatsApp");
 if(o.pagamento=="Pix"&&o.pix){view("vPix");$("#pixAmount").textContent=brlFmt(o.total);$("#pixQr").src="data:image/png;base64,"+o.pix.qr_code_base64;$("#pixCode").value=o.pix.qr_code;$("#pixStatus").textContent="Aguardando pagamento…";$("#pixStatus").classList.remove("ok");
 clearInterval(poll);poll=setInterval(async()=>{try{const s=await(await fetch(api+"/api/pedido?id="+o.id)).json();

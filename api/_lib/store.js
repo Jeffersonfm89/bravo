@@ -26,7 +26,7 @@ async function touchCustomer(o, delta) { // delta: +1 novo pedido, -1 cancelado,
   c.pedidos = Math.max(0, c.pedidos + delta); c.totalGasto = Math.max(0, Math.round((c.totalGasto + delta * o.total) * 100) / 100);
   if (delta > 0 && (!c.ultimoPedido || o.criadoEm >= c.ultimoPedido)) {
     const x = o.cliente; c.nome = x.nome; c.telOriginal = x.tel;
-    if (x.tipo === 'Entrega') c.endereco = { bairro: x.bairro, rua: x.rua, numero: x.numero, complemento: x.complemento, referencia: x.referencia, completo: x.end };
+    if (x.tipo === 'Entrega') { c.endereco = { bairro: x.bairro, rua: x.rua, numero: x.numero, complemento: x.complemento, referencia: x.referencia, completo: x.end }; require('./addr').pushAddr(c, x); }
     c.ultimoPedido = o.criadoEm; c.ultimoPedidoId = o.id;
   }
   await putJSON(key, c);
@@ -54,4 +54,5 @@ const saveList = l => { l.atualizadoEm = new Date().toISOString(); return putJSO
 async function allLists() { return (await mapLimit(await listKeys('lists/'), 25, b => getJSON(b.pathname))).filter(Boolean).sort((a, b) => b.criadoEm.localeCompare(a.criadoEm)); }
 const { del } = require('@vercel/blob');
 const delList = id => del(LKEY(id));
-module.exports = { setOptOut, getList, saveList, allLists, delList, getChat, saveChat, listChats, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings, telKey };
+const getCustomer = tel => { const k = telKey(tel); return k ? getJSON(`customers/${k}.json`) : null; };
+module.exports = { getCustomer, setOptOut, getList, saveList, allLists, delList, getChat, saveChat, listChats, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings, telKey };

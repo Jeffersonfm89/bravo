@@ -2,12 +2,14 @@
 // GET ?id=: dados do pedido para a página de acompanhamento (atualiza status do Pix no MP se ainda não pago).
 const crypto = require('crypto');
 const { cors, mp, body, fail, bad, clean } = require('./_lib/common');
-const { saveOrder, getOrder, touchCustomer, getSettings } = require('./_lib/store');
+const { saveOrder, getOrder, touchCustomer, getSettings, getCustomer } = require('./_lib/store');
+const { checkRef, addrList, mask } = require('./_lib/addr');
 const { markPaid } = require('./_lib/paid');
 const { buildBreakdown, applyAddPrices } = require('../products.js');
 const PAGS = ['Pix', 'Cartão', 'Dinheiro na entrega'];
 function newId() { const d = new Date(Date.now() - 3 * 3600e3); return d.toISOString().slice(2, 10).replace(/-/g, '') + '-' + crypto.randomBytes(4).toString('hex').toUpperCase(); }
-function publicView(o) { const { pixQr, ...rest } = o; return rest; }
+function publicView(o) { const { pixQr, ...rest } = o; // endereço vindo de addressRef nunca volta completo ao navegador
+  if (o.cliente && o.cliente.viaRef) { const c = o.cliente; rest.cliente = { ...c, rua: undefined, numero: undefined, complemento: undefined, referencia: undefined, end: c.endMask }; delete rest.cliente.endMask; } return rest; }
 async function refreshPix(o) {
   if (!o.pixId || o.pago) return o;
   const p = await mp('/v1/payments/' + o.pixId);
@@ -28,6 +30,11 @@ module.exports = async (req, res) => {
     if (!cliente.nome || cliente.tel.replace(/\D/g, '').length < 10) throw bad('Informe nome e telefone com DDD');
     let fee = 0;
     if (cliente.tipo === 'Entrega') {
+      if (c.addressRef) { // cliente usou endereço salvo (outro aparelho): resolve no servidor, amarrado ao telefone
+        const id = checkRef(c.addressRef, cliente.tel), cu = id && await getCustomer(cliente.tel), a = cu && addrList(cu).find(x => x.id === id);
+        if (!a) throw bad('Endereço salvo não encontrado: informe o endereço novamente');
+        Object.assign(c, { bairro: a.bairro, rua: a.rua, numero: a.numero, complemento: a.complemento, referencia: a.referencia }); cliente.viaRef = true; cliente.endMask = mask(a);
+      }
       Object.assign(cliente, { bairro: clean(c.bairro, 60), rua: clean(c.rua, 120), numero: clean(c.numero, 20), complemento: clean(c.complemento, 80), referencia: clean(c.referencia, 120) });
       if (!cliente.rua || !cliente.numero) throw bad('Informe rua e número');
       const st = await getSettings(); const bz = st.bairros.find(x => x.nome === cliente.bairro && x.ativo);
