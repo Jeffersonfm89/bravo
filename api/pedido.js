@@ -6,7 +6,7 @@ const { saveOrder, getOrder, touchCustomer, getSettings, getCustomer } = require
 const { checkRef, addrList, mask } = require('./_lib/addr');
 const { markPaid } = require('./_lib/paid');
 const sec = require('./_lib/security');
-const { buildBreakdown, applyAddPrices } = require('../products.js');
+const P = require('../products.js'); const { buildBreakdown } = P;
 const PAGS = ['Pix', 'Cartão', 'Dinheiro na entrega'];
 function newId() { const d = new Date(Date.now() - 3 * 3600e3); return d.toISOString().slice(2, 10).replace(/-/g, '') + '-' + crypto.randomBytes(4).toString('hex').toUpperCase(); }
 function publicView(o) { const { pixQr, ...rest } = o; // endereço vindo de addressRef nunca volta completo ao navegador
@@ -48,7 +48,7 @@ module.exports = async (req, res) => {
     const pagamento = PAGS.includes(b.pagamento) ? b.pagamento : null; if (!pagamento) throw bad('Forma de pagamento inválida');
     if (!(await sec.orderLimit(sec.ipOf(req), cliente.tel).catch(() => true))) return res.status(429).json({ error: 'Você fez vários pedidos em pouco tempo 😅 Aguarde uns minutinhos ou fale com a gente no WhatsApp.' });
     if (!Array.isArray(b.items) || !b.items.length || b.items.length > 50) throw bad('Carrinho inválido');
-    applyAddPrices((await getSettings()).pastelAdds);   // preços de adicionais definidos no painel
+    await require('./_lib/store').loadMenuInto(P);   // cardápio e preços salvos no painel (mesmos da loja)
     let br; try { br = buildBreakdown(b.items, cliente.tipo, fee); } catch (e) { throw bad(e.message); }   // preços SEMPRE do servidor
     const now = new Date().toISOString();
     const o = { id: newId(), criadoEm: now, status: 'Recebido', pago: false, pagamento, cliente, ...br, historico: [{ em: now, status: 'Recebido' }] };

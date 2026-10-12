@@ -5,6 +5,7 @@ const { setOptOut, getList, saveList, allLists, delList, getChat, saveChat, list
 const { ORDER_STATUSES, PASTEL_ADDS } = require('../products.js');
 const { refreshPix } = require('./pedido.js');
 const sec = require('./_lib/security');
+const store = require('./_lib/store');
 function authed(req) {
   const want = process.env.ADMIN_PASSWORD || ''; const got = String(req.headers['x-admin-password'] || '');
   if (!want) return false;
@@ -105,6 +106,47 @@ module.exports = async (req, res) => {
       await saveOrder(o); if (was !== now) await touchCustomer(o, now ? -1 : +1).catch(() => {});
       const { pixQr, ...out } = o; return res.json(out);
     }
+    // ---- cardápio (aba Cardápio)
+    if (b.action === 'menuGet') { const P = require('../products.js'); await store.loadMenuInto(P); return res.json({ products: P.PRODUCTS, defaults: P.DEFAULT_PRODUCTS.map(p => p.id), cats: P.CATS_ORDER }); }
+    if (b.action === 'menuImg') { // foto já reduzida no celular: data:image/jpeg;base64,...
+      const m = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(String(b.data || '')); if (!m) throw bad('Foto inválida (use JPG)');
+      const buf = Buffer.from(m[1], 'base64'); if (buf.length < 100 || buf.length > 1.5e6 || buf[0] !== 0xFF || buf[1] !== 0xD8) throw bad('Foto inválida ou grande demais');
+      const key = `menu-img/${crypto.randomBytes(8).toString('hex')}.jpg`; await store.putImage(key, buf); return res.json({ img: '/api/img?k=' + key });
+    }
+    if (b.action === 'menuSave' || b.action === 'menuCreate') {
+      const P = require('../products.js'), menu = await store.getMenu(); menu.overrides = menu.overrides || {}; menu.custom = menu.custom || [];
+      const num = (v, max, lbl) => { const x = Math.round(Number(String(v).replace(',', '.')) * 100) / 100; if (!(x >= 0 && x <= max) || String(v).trim() === '') throw bad('Preço inválido: ' + lbl); return x; };
+      const name = String(b.name || '').trim().slice(0, 80), cat = String(b.cat || '').trim().slice(0, 30), desc = String(b.desc == null ? '' : b.desc).replace(/\s+/g, ' ').trim().slice(0, 250);
+      if (!name) throw bad('Informe o nome'); if (!cat) throw bad('Informe a categoria');
+      const img = b.img === undefined || b.img === '' ? undefined : String(b.img); if (img && !/^(\/api\/img\?k=menu-img\/[a-f0-9]{16}\.jpg|img\/[a-z0-9-]+\.(jpg|png))$/.test(img)) throw bad('Foto inválida');
+      const ativo = b.ativo !== false;
+      if (b.action === 'menuCreate') {
+        const price = num(b.price, 1000, name); if (!(price > 0)) throw bad('Informe o preço');
+        const p = { id: 'c-' + crypto.randomBytes(4).toString('hex'), custom: true, cat, name, desc, price, img: img || 'img/logo.jpg', ativo };
+        menu.custom.push(p); await store.saveMenu(menu); return res.json(p);
+      }
+      const id = String(b.id || ''), cu = menu.custom.find(p => p.id === id), def = P.DEFAULT_PRODUCTS.find(p => p.id === id);
+      if (!cu && !def) return res.status(404).json({ error: 'Item não encontrado' });
+      const hasOpts = !!(def && def.options), price = num(b.price ?? 0, 1000, name);
+      if (!hasOpts && !(price > 0)) throw bad('Informe o preço');
+      if (cu) { Object.assign(cu, { cat, name, desc, price, ativo }); if (img) cu.img = img; }
+      else { const o = { name, cat, desc, price, ativo }; if (img) o.img = img; else if (menu.overrides[id] && menu.overrides[id].img) o.img = menu.overrides[id].img;
+        if (b.choices && typeof b.choices === 'object') { o.choices = {};
+          (def.options || []).forEach(g => { if (g.padds || g.id === 'sem' || !b.choices[g.id]) return; o.choices[g.id] = {};
+            g.choices.forEach(c => { if (b.choices[g.id][c.id] !== undefined) o.choices[g.id][c.id] = num(b.choices[g.id][c.id], 500, c.name); }); }); }
+        else if (menu.overrides[id] && menu.overrides[id].choices) o.choices = menu.overrides[id].choices;
+        menu.overrides[id] = o; }
+      await store.saveMenu(menu); await store.loadMenuInto(P); return res.json(P.PRODUCTS.find(p => p.id === id));
+    }
+    if (b.action === 'menuDelete') {
+      const menu = await store.getMenu(), id = String(b.id || ''), p = (menu.custom || []).find(x => x.id === id);
+      if (!p) throw bad('Só itens criados no painel podem ser excluídos. Para os outros, desmarque "Disponível".');
+      menu.custom = menu.custom.filter(x => x.id !== id); await store.saveMenu(menu);
+      const k = /^\/api\/img\?k=(menu-img\/[a-f0-9]{16}\.jpg)$/.exec(p.img || ''); if (k) await store.delBlob(k[1]).catch(() => {});
+      return res.json({ ok: true });
+    }
+    if (b.action === 'menuImgDelete') { const k = /^\/api\/img\?k=(menu-img\/[a-f0-9]{16}\.jpg)$/.exec(String(b.img || '')); if (!k) throw bad('Foto inválida');
+      const menu = await store.getMenu(), used = JSON.stringify(menu).includes(k[1]); if (used) throw bad('Foto em uso'); await store.delBlob(k[1]); return res.json({ ok: true }); }
     throw bad('Ação inválida');
   } catch (e) { fail(res, e); }
 };

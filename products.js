@@ -1,37 +1,38 @@
 /* Lista de produtos e preços — usada pela loja E pelo servidor (o servidor recalcula o total). */
 // ===== CARDÁPIO =====
-// PREÇOS PROVISÓRIOS (placeholder) marcados com  // PROVISÓRIO  — troque pelos valores reais.
+// Estes são os valores PADRÃO. O dono edita nome/preço/foto/descrição no painel (aba Cardápio); as mudanças ficam no Blob (config/menu.json) e são aplicadas por applyMenu().
 // Opções: grupos "single" (escolha 1) ou "multi" (várias); preço final = price + soma das opções escolhidas.
 var PASTEL_IMG = "img/pastel.jpg";
 // Adicionais de pastel (preço editável no painel > Taxas de entrega > "Adicionais de pastel"; este é o padrão)
 var PASTEL_ADDS = [
   { id: "calabresa", name: "Calabresa", price: 8.00 }, { id: "queijo", name: "Queijo", price: 8.00 }, { id: "bacon", name: "Bacon", price: 8.00 },
   { id: "pizza", name: "Pizza (tomate, mussarela, presunto, orégano)", price: 8.00 }, { id: "frango", name: "Frango", price: 8.00 } ];
-function addsGroup() { return { id: "add", label: "Adicionais", type: "multi", min: 0, max: PASTEL_ADDS.length, choices: PASTEL_ADDS }; }
+function addsGroup() { return { id: "add", padds: true, label: "Adicionais", type: "multi", min: 0, max: PASTEL_ADDS.length, choices: PASTEL_ADDS }; }
 function semGroup(ings) { return { id: "sem", label: "Tirar algo", type: "multi", min: 0, max: ings.length, choices: ings.map(function (n) { return { id: n.toLowerCase().normalize("NFD").replace(/[^a-z]/g, ""), name: "Sem " + n, price: 0 }; }) }; }
 // ings = ingredientes do próprio pastel (viram as opções de "Tirar algo")
 function pastel(id, name, desc, price, ings) { return { id: id, cat: "Pastéis", name: name, desc: desc, price: price, img: "img/" + id + ".jpg", nota: true, options: [semGroup(ings), addsGroup()] }; }
 /* Aplica preços de adicionais salvos no painel: { calabresa: 8, ... } */
-function applyAddPrices(map) { if (!map) return; PASTEL_ADDS.forEach(function (a) { var v = Number(map[a.id]); if (map[a.id] != null && v >= 0 && v <= 100) a.price = Math.round(v * 100) / 100; }); }
+function applyAddPrices(map) { if (!map) return; var setP = function (a) { var v = Number(map[a.id]); if (map[a.id] != null && map[a.id] !== '' && v >= 0 && v <= 100) a.price = Math.round(v * 100) / 100; };
+  PASTEL_ADDS.forEach(setP); if (typeof PRODUCTS !== 'undefined') PRODUCTS.forEach(function (p) { (p.options || []).forEach(function (g) { if (g.padds) g.choices.forEach(setP); }); }); }
 var PRODUCTS = [
-  pastel("p-frango", "Pastel de Frango", "Frango desfiado temperado", 9.00, ["Frango"]),                       // PROVISÓRIO
-  pastel("p-frango-catupiry", "Pastel de Frango com Catupiry", "Frango desfiado e Catupiry", 11.00, ["Frango", "Catupiry"]), // PROVISÓRIO
-  pastel("p-frango-requeijao", "Pastel de Frango com Requeijão", "Frango desfiado e requeijão", 11.00, ["Frango", "Requeijão"]), // PROVISÓRIO
-  pastel("p-carne-ovo-queijo", "Pastel de Carne com Ovo e Queijo", "Carne moída, ovo e queijo", 12.00, ["Carne", "Ovo", "Queijo"]), // PROVISÓRIO
-  pastel("p-queijo", "Pastel de Queijo", "Queijo mussarela", 9.00, ["Queijo"]),                               // PROVISÓRIO
-  pastel("p-pizza", "Pastel de Pizza", "Tomate, queijo mussarela, presunto, orégano e catupiry", 11.00, ["Tomate", "Queijo", "Presunto", "Orégano", "Catupiry"]), // PROVISÓRIO
-  pastel("p-calabresa", "Pastel de Calabresa", "Calabresa", 9.00, ["Calabresa"]),                                // PROVISÓRIO
-  pastel("p-calabresa-queijo", "Pastel de Calabresa com Queijo", "Calabresa e queijo mussarela", 11.00, ["Calabresa", "Queijo"]), // PROVISÓRIO
-  pastel("p-calabresa-catupiry", "Pastel de Calabresa com Catupiry", "Calabresa e Catupiry", 11.00, ["Calabresa", "Catupiry"]), // PROVISÓRIO
-  pastel("p-bacon", "Pastel de Bacon", "Bacon", 10.00, ["Bacon"]),                                           // PROVISÓRIO
-  pastel("p-bacon-catupiry", "Pastel de Bacon com Catupiry", "Bacon e Catupiry", 12.00, ["Bacon", "Catupiry"]),          // PROVISÓRIO
-  pastel("p-bacon-requeijao", "Pastel de Bacon com Requeijão", "Bacon e requeijão", 12.00, ["Bacon", "Requeijão"]),       // PROVISÓRIO
-  { id: "p-personalizado", cat: "Pastéis", name: "Pastel Personalizado", desc: "Monte do seu jeito: escolha os ingredientes", price: 6.00, img: "img/p-personalizado.jpg", nota: true, // base PROVISÓRIA
+  pastel("p-frango", "Pastel de Frango", "Frango desfiado temperado", 9.00, ["Frango"]),
+  pastel("p-frango-catupiry", "Pastel de Frango com Catupiry", "Frango desfiado e Catupiry", 11.00, ["Frango", "Catupiry"]),
+  pastel("p-frango-requeijao", "Pastel de Frango com Requeijão", "Frango desfiado e requeijão", 11.00, ["Frango", "Requeijão"]),
+  pastel("p-carne-ovo-queijo", "Pastel de Carne com Ovo e Queijo", "Carne moída, ovo e queijo", 12.00, ["Carne", "Ovo", "Queijo"]),
+  pastel("p-queijo", "Pastel de Queijo", "Queijo mussarela", 9.00, ["Queijo"]),
+  pastel("p-pizza", "Pastel de Pizza", "Tomate, queijo mussarela, presunto, orégano e catupiry", 11.00, ["Tomate", "Queijo", "Presunto", "Orégano", "Catupiry"]),
+  pastel("p-calabresa", "Pastel de Calabresa", "Calabresa", 9.00, ["Calabresa"]),
+  pastel("p-calabresa-queijo", "Pastel de Calabresa com Queijo", "Calabresa e queijo mussarela", 11.00, ["Calabresa", "Queijo"]),
+  pastel("p-calabresa-catupiry", "Pastel de Calabresa com Catupiry", "Calabresa e Catupiry", 11.00, ["Calabresa", "Catupiry"]),
+  pastel("p-bacon", "Pastel de Bacon", "Bacon", 10.00, ["Bacon"]),
+  pastel("p-bacon-catupiry", "Pastel de Bacon com Catupiry", "Bacon e Catupiry", 12.00, ["Bacon", "Catupiry"]),
+  pastel("p-bacon-requeijao", "Pastel de Bacon com Requeijão", "Bacon e requeijão", 12.00, ["Bacon", "Requeijão"]),
+  { id: "p-personalizado", cat: "Pastéis", name: "Pastel Personalizado", desc: "Monte do seu jeito: escolha os ingredientes", price: 6.00, img: "img/p-personalizado.jpg", nota: true,
     options: [{ id: "ing", label: "Ingredientes", type: "multi", min: 1, max: 6, choices: [
       { id: "frango", name: "Frango", price: 2.00 }, { id: "carne", name: "Carne", price: 2.00 }, { id: "ovo", name: "Ovo", price: 1.50 },
       { id: "mussarela", name: "Queijo mussarela", price: 2.00 }, { id: "presunto", name: "Presunto", price: 2.00 }, { id: "calabresa", name: "Calabresa", price: 2.00 },
       { id: "bacon", name: "Bacon", price: 2.50 }, { id: "catupiry", name: "Catupiry", price: 2.00 }, { id: "requeijao", name: "Requeijão", price: 2.00 },
-      { id: "tomate", name: "Tomate", price: 1.00 }, { id: "oregano", name: "Orégano", price: 0.50 }, { id: "milho", name: "Milho", price: 1.00 } ] }, addsGroup()] }, // preços por ingrediente PROVISÓRIOS
+      { id: "tomate", name: "Tomate", price: 1.00 }, { id: "oregano", name: "Orégano", price: 0.50 }, { id: "milho", name: "Milho", price: 1.00 } ] }, addsGroup()] },
   { id: "a-copo", cat: "Açaí", name: "Açaí no Copo",
     desc: "Escolha o tamanho e os adicionais", price: 0, img: "img/acai.jpg",
     options: [
@@ -44,6 +45,24 @@ var PRODUCTS = [
   { id: "b-coca-600", cat: "Bebidas", name: "Coca-Cola 600ml", desc: "Gelada", price: 10.00, img: "img/b-coca-600.jpg" },
   { id: "b-coca-2l", cat: "Bebidas", name: "Coca-Cola 2L", desc: "Gelada", price: 16.00, img: "img/b-coca-2l.jpg" },
 ];
+var DEFAULT_PRODUCTS = JSON.parse(JSON.stringify(PRODUCTS));
+var CATS_ORDER = ["Pastéis", "Açaí", "Bebidas"];
+/* Cardápio salvo no painel: { overrides: { id: {name,cat,price,desc,img,ativo,choices:{grupo:{opção:preço}}} }, custom: [produtos novos] }.
+   Recria PRODUCTS (no lugar, mesma array) a partir dos padrões + alterações. Usado no servidor (preço do pedido) e no painel. */
+function applyMenu(menu, pastelAdds) {
+  menu = menu || {}; var ov = menu.overrides || {};
+  var list = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)).concat(JSON.parse(JSON.stringify(menu.custom || [])));
+  PRODUCTS.length = 0; list.forEach(function (p) { PRODUCTS.push(p); });
+  applyAddPrices(pastelAdds);
+  PRODUCTS.forEach(function (p) { var o = ov[p.id]; if (!o) return;
+    ['name', 'cat', 'desc', 'img'].forEach(function (k) { if (typeof o[k] === 'string' && (o[k] || k === 'desc')) p[k] = o[k]; });
+    if (typeof o.price === 'number' && o.price >= 0) p.price = o.price; if (typeof o.ativo === 'boolean') p.ativo = o.ativo;
+    var ch = o.choices || {}; (p.options || []).forEach(function (g) { if (g.padds || !ch[g.id]) return; g.choices.forEach(function (c) { var v = ch[g.id][c.id]; if (typeof v === 'number' && v >= 0) c.price = v; }); });
+  });
+  return PRODUCTS;
+}
+/* Loja: troca o cardápio pelo que veio da API (/api/menu). */
+function setProducts(list) { if (!Array.isArray(list) || !list.length) return; PRODUCTS.length = 0; list.forEach(function (p) { PRODUCTS.push(p); }); }
 /* Valida opções e calcula preço unitário + descrição ("300ml + Paçoca, Ninho"). Usado no site e no servidor. */
 function priceItem(p, opts, nota) {
   opts = opts || {}; nota = String(nota == null ? '' : nota).replace(/\s+/g, ' ').trim();
@@ -96,4 +115,4 @@ function orderText(o, link) {
   if (link) t += '\n\nAcompanhe o pedido: ' + link;
   return t;
 }
-if (typeof module !== 'undefined') module.exports = { PRODUCTS, PASTEL_ADDS, applyAddPrices, priceItem, DELIVERY_FEE, deliveryFee, ORDER_STATUSES, buildBreakdown, orderText, brlFmt, feeLabel };
+if (typeof module !== 'undefined') module.exports = { PRODUCTS, DEFAULT_PRODUCTS, CATS_ORDER, applyMenu, setProducts, PASTEL_ADDS, applyAddPrices, priceItem, DELIVERY_FEE, deliveryFee, ORDER_STATUSES, buildBreakdown, orderText, brlFmt, feeLabel };

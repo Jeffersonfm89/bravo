@@ -7,19 +7,19 @@ const $=s=>document.querySelector(s),brl=v=>v.toLocaleString("pt-BR",{style:"cur
 localStorage.removeItem("bravoCart");
 let cart=JSON.parse(localStorage.getItem("bravoCart2")||"{}");let cat="all";
 // limpa itens que não existem mais no cardápio
-for(const k in cart){try{const p=PRODUCTS.find(p=>p.id==cart[k].id);if(p.ativo===false)throw 0;priceItem(p,cart[k].opts,cart[k].nota)}catch(e){delete cart[k]}}
+function cleanCart(full){for(const k in cart){const p=PRODUCTS.find(p=>p.id==cart[k].id);if(!p&&!full)continue;try{if(!p||p.ativo===false)throw 0;priceItem(p,cart[k].opts,cart[k].nota)}catch(e){delete cart[k]}}}cleanCart(false);
 const save=()=>{localStorage.setItem("bravoCart2",JSON.stringify(cart));render()};
 const fromPrice=p=>p.price+(p.options||[]).reduce((s,g)=>s+(g.min?g.choices.map(c=>c.price).sort((a,b)=>a-b).slice(0,g.min).reduce((a,b)=>a+b,0):0),0);
-function grid(){$("#grid").innerHTML=PRODUCTS.filter(p=>p.ativo!==false&&(cat=="all"||p.cat==cat)).map(p=>`<div class="card"><img src="${p.img}" alt="${p.name}" loading="lazy"><div class="b"><h3>${p.name}</h3><small>${p.desc}</small><div class="p">${p.options?"a partir de ":""}${brl(fromPrice(p))}</div><button class="add" data-id="${p.id}">${p.options?"Escolher":"Adicionar"}</button></div></div>`).join("")}
-function lines(){return Object.entries(cart).map(([k,c])=>{const p=PRODUCTS.find(x=>x.id==c.id),pr=priceItem(p,c.opts,c.nota);return{k,p,qty:c.qty,...pr}})}
+function grid(){$("#grid").innerHTML=PRODUCTS.filter(p=>p.ativo!==false&&(cat=="all"||p.cat==cat)).map(p=>`<div class="card"><img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy"><div class="b"><h3>${esc(p.name)}</h3><small>${esc(p.desc||"")}</small><div class="p">${p.options?"a partir de ":""}${brl(fromPrice(p))}</div><button class="add" data-id="${p.id}">${p.options?"Escolher":"Adicionar"}</button></div></div>`).join("")}
+function lines(){return Object.entries(cart).filter(([k,c])=>PRODUCTS.some(x=>x.id==c.id)).map(([k,c])=>{const p=PRODUCTS.find(x=>x.id==c.id),pr=priceItem(p,c.opts,c.nota);return{k,p,qty:c.qty,...pr}})}
 function total(){return lines().reduce((s,l)=>s+l.unit*l.qty,0)}
 function addToCart(id,opts,nota){const pr=priceItem(PRODUCTS.find(p=>p.id==id),opts,nota),k=id+"|"+JSON.stringify(pr.opts)+"|"+(pr.nota||"");cart[k]=cart[k]||{id,opts:pr.opts,nota:pr.nota||"",qty:0};cart[k].qty++;save();toast("Adicionado ao carrinho!")}
 function render(){const L=lines(),n=L.reduce((a,l)=>a+l.qty,0);$("#count").textContent=n;
-$("#items").innerHTML=n?L.map(l=>`<div class="it"><img src="${l.p.img}" alt=""><div class="n">${l.p.name}${l.detalhe?`<br><small class="det">${esc(l.detalhe)}</small>`:""}<br><b>${brl(l.unit*l.qty)}</b><br><button class="rm" data-rm="${esc(l.k)}">Remover</button></div><div class="q"><button data-dec="${esc(l.k)}">−</button><span>${l.qty}</span><button data-inc="${esc(l.k)}">+</button></div></div>`).join(""):"<p>Seu carrinho está vazio.</p>";
+$("#items").innerHTML=n?L.map(l=>`<div class="it"><img src="${esc(l.p.img)}" alt=""><div class="n">${esc(l.p.name)}${l.detalhe?`<br><small class="det">${esc(l.detalhe)}</small>`:""}<br><b>${brl(l.unit*l.qty)}</b><br><button class="rm" data-rm="${esc(l.k)}">Remover</button></div><div class="q"><button data-dec="${esc(l.k)}">−</button><span>${l.qty}</span><button data-inc="${esc(l.k)}">+</button></div></div>`).join(""):"<p>Seu carrinho está vazio.</p>";
 $("#total").textContent=brl(total());if(!n&&!$("#vReview").hidden)view("vCart")}
 /* ---- Modal de opções ---- */
 let mp=null;
-function openOpts(p){mp=p;$("#mTitle").textContent=p.name;$("#mDesc").textContent=p.desc;
+function openOpts(p){mp=p;$("#mTitle").textContent=p.name;$("#mDesc").textContent=p.desc||"";
 $("#mBody").innerHTML=p.options.map(g=>`<fieldset><legend>${g.label}${g.type=="single"?" (escolha 1)":g.min?` (mín. ${g.min}, máx. ${g.max})`:" (opcional)"}</legend>${g.choices.map((c,i)=>`<label class="opt"><input type="${g.type=="single"?"radio":"checkbox"}" name="g_${g.id}" value="${c.id}" ${g.type=="single"&&i==0?"checked":""}> <span>${c.name}</span><b>${c.price?(g.type=="single"&&!p.price?"":"+ ")+brl(c.price):""}</b></label>`).join("")}</fieldset>`).join("")+(p.nota?`<fieldset><legend>Outra observação</legend><input id="mNota" maxlength="100" placeholder="Ex.: bem passado, cortar ao meio" style="width:100%"></fieldset>`:"");
 updOpts();$("#optModal").hidden=false}
 function readOpts(){const o={};mp.options.forEach(g=>o[g.id]=[...document.querySelectorAll(`[name=g_${g.id}]:checked`)].map(x=>x.value));return o}
@@ -74,6 +74,10 @@ $("#sendWa").hidden=!WHATSAPP_NUMBER;$("#sendWa").onclick=()=>window.open(`https
 function apiBase(){return API}
 $("#pixCopy").onclick=()=>{navigator.clipboard?.writeText($("#pixCode").value);toast("Código Pix copiado!")};
 $("#copy").onclick=()=>{$("#sumText").select();navigator.clipboard?.writeText($("#sumText").value).catch(()=>document.execCommand("copy"));toast("Pedido copiado!")};
-grid();render();
+function tabs(){const cs=[...new Set(PRODUCTS.filter(p=>p.ativo!==false).map(p=>p.cat))].sort((a,b)=>{const o=CATS_ORDER,i=o.indexOf(a),j=o.indexOf(b);return(i<0?99:i)-(j<0?99:j)});if(cat!="all"&&!cs.includes(cat))cat="all";
+const t=document.querySelector(".tabs");if(t)t.innerHTML=`<button data-cat="all" class="${cat=="all"?"on":""}">Tudo</button>`+cs.map(c=>`<button data-cat="${esc(c)}" class="${cat==c?"on":""}">${esc(c)}</button>`).join("")}
+/* cardápio vem do servidor (editado no painel); se falhar, usa o padrão de products.js */
+async function loadMenu(){try{if(API===null)throw 0;const r=await fetch(API+"/api/menu");if(!r.ok)throw 0;const d=await r.json();setProducts(d.products)}catch(e){}cleanCart(true);localStorage.setItem("bravoCart2",JSON.stringify(cart));tabs();grid();render()}
+tabs();grid();render();loadMenu();
 
-(function(){var b=document.getElementById("promoGo");if(b)b.onclick=function(){addToCart("a-garrafa");if(typeof openCart=="function")openCart(true);}})();
+(function(){var b=document.getElementById("promoGo");if(b)b.onclick=function(){if(!PRODUCTS.some(function(p){return p.id=="a-garrafa"&&p.ativo!==false}))return;addToCart("a-garrafa");if(typeof openCart=="function")openCart(true);}})();

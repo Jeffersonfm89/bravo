@@ -55,4 +55,11 @@ async function allLists() { return (await mapLimit(await listKeys('lists/'), 25,
 const { del } = require('@vercel/blob');
 const delList = id => del(LKEY(id));
 const getCustomer = tel => { const k = telKey(tel); return k ? getJSON(`customers/${k}.json`) : null; };
-module.exports = { getJSON, putJSON, getCustomer, setOptOut, getList, saveList, allLists, delList, getChat, saveChat, listChats, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings, telKey };
+// ---- cardápio editado no painel + fotos (privadas no Blob, servidas por /api/img)
+const getMenu = async () => (await getJSON('config/menu.json')) || { overrides: {}, custom: [] };
+const saveMenu = m => putJSON('config/menu.json', m);
+async function putImage(key, buf) { await put(key, buf, { access: 'private', contentType: 'image/jpeg', addRandomSuffix: false, allowOverwrite: true }); }
+async function getImage(key) { const r = await get(key, { access: 'private' }).catch(e => { if (e.name === 'BlobNotFoundError') return null; throw e; }); return r && r.stream ? Buffer.from(await new Response(r.stream).arrayBuffer()) : null; }
+const delBlob = key => del(key);
+async function loadMenuInto(P) { const [m, s] = await Promise.all([getMenu(), getSettings()]); P.applyMenu(m, s.pastelAdds); return m; }
+module.exports = { getMenu, saveMenu, putImage, getImage, delBlob, loadMenuInto, getJSON, putJSON, getCustomer, setOptOut, getList, saveList, allLists, delList, getChat, saveChat, listChats, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings, telKey };
