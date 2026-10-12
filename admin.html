@@ -1,5 +1,5 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Painel – Bravo</title><meta name="robots" content="noindex,nofollow"><link rel="icon" href="img/logo.jpg"><link rel="stylesheet" href="style.css?v=20261011231620">
+<title>Painel – Bravo</title><meta name="robots" content="noindex,nofollow"><link rel="icon" href="img/logo.jpg"><link rel="stylesheet" href="style.css?v=20261012013118">
 <style>.wrap{max-width:900px;margin:auto;padding:14px;display:flex;flex-direction:column;gap:12px}.o{background:#161616;border:1px solid #262626;border-radius:14px;padding:12px}
 .o h3{margin:0 0 4px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.st{color:#f5b400}.paid{color:#3c3}.pend{color:#e88}.btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .btns button{background:#222;color:#fff;border:1px solid #444;border-radius:20px;padding:8px 12px}.btns button.on{background:#f5b400;color:#000}.wa{display:inline-block;margin-top:8px;background:#25d366;color:#000;border-radius:12px;padding:10px 14px;font-weight:800;text-decoration:none}
@@ -32,7 +32,7 @@
 <div id="chatList"></div><div id="chatView" hidden><button id="chatBack" class="ghost" style="padding:6px 12px">← Conversas</button><h3 id="chatTitle"></h3><div id="chatMsgs" class="cmsgs"></div>
 <form id="chatForm" class="row2"><input name="txt" placeholder="Responder…" maxlength="1000" autocomplete="off"><button class="go" style="padding:10px 14px">Enviar</button></form></div></section>
 <section id="tCli" hidden><input id="qCli" placeholder="Buscar por nome, telefone ou bairro"><div id="cli"></div></section></div></div>
-<script src="products.js?v=20261011231620"></script><script src="bairros.js?v=20261011231620"></script><script src="app-config.js?v=20261011231620"></script><script>
+<script src="products.js?v=20261012013118"></script><script src="bairros.js?v=20261012013118"></script><script src="app-config.js?v=20261012013118"></script><script>
 const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let pw=sessionStorage.getItem("bravoAdm")||"",orders=[],lastWa={};window.getOrders=()=>orders;
 async function call(body){const r=await fetch(API+"/api/admin",{method:"POST",headers:{"Content-Type":"application/json","X-Admin-Password":pw},body:JSON.stringify(body)});const d=await r.json();if(r.status==401){sessionStorage.removeItem("bravoAdm");$("#panel").hidden=true;$("#login").hidden=false;throw new Error("Senha incorreta")}if(!r.ok)throw new Error("Erro ao carregar: "+(d.error||r.status));return d}
@@ -94,4 +94,4 @@ ${e?`📍 ${esc(e.rua||"")}, ${esc(e.numero||"")}${e.complemento?" - "+esc(e.com
 $("#qCli").oninput=drawCli;
 $("#hideDone").onchange=render;$("#reload").onclick=load;if(pw)start();
 </script><div id="newBanner" hidden><div><b id="nbText">NOVO PEDIDO!</b><button id="nbAck">OK, vi o pedido</button></div></div>
-<div id="printArea"></div><style id="pageStyle"></style><script src="admin-extra.js?v=20261011231620"></script><script src="admin-chat.js?v=20261011231620"></script><script src="admin-clientes.js?v=20261011231620"></script><script src="admin-kanban.js?v=20261011231620"></script></body></html>
+<div id="printArea"></div><style id="pageStyle"></style><script src="admin-extra.js?v=20261012013118"></script><script src="admin-bubbles.js?v=20261012013118"></script><script src="admin-chat.js?v=20261012013118"></script><script src="admin-clientes.js?v=20261012013118"></script><script src="admin-kanban.js?v=20261012013118"></script></body></html>

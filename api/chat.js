@@ -29,6 +29,7 @@ module.exports = async (req, res) => {
       const last = c.msgs.filter(m => m.de === 'cliente').slice(-1)[0];
       if (last && Date.now() - new Date(last.em) < MIN_GAP_MS) return res.status(429).json({ error: 'Calma 🙂 espere um instante para enviar outra mensagem' });
       if (c.msgs.length >= MAX_MSGS || ipLimited(req, 60)) return res.status(429).json({ error: 'Limite de mensagens atingido. Fale pelo WhatsApp.' });
+      if (c.fechado) { c.fechado = false; c.reabertoEm = new Date().toISOString(); } // nova msg reabre a conversa
       c.msgs.push({ de: 'cliente', txt, em: new Date().toISOString() }); c.unreadAdmin = (c.unreadAdmin || 0) + 1;
       if (!c.humano) { // resposta automática opcional (desligada por padrão)
         try { const st = await getSettings(); const o = c.orderId ? await getOrder(c.orderId) : null; const r = await aiReply(c, st, o);

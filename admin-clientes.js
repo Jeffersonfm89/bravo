@@ -18,6 +18,14 @@
     '<div class="rbar"><label><input type="checkbox" id="selAll" class="cchk"> Selecionar todos</label><span id="selN" class="est">0 selecionados</span>' +
     '<select id="toList"></select><button id="addToList" class="go" style="padding:8px 12px">Adicionar à lista de chamada</button></div>');
   q("#cli").insertAdjacentHTML("afterend", '<h4>📋 Listas de chamada</h4><div class="rbar"><input id="newList" placeholder="Nome da nova lista" maxlength="60"><button id="mkList" class="ghost" style="padding:8px 12px">Criar lista</button></div><div id="lists"></div>');
+  function dg(t) { return String(t || "").replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, ""); }
+  function chatsOf(tel) { return (window.CHATS || []).filter(function (x) { return x.tel && dg(x.tel) === dg(tel); }); }
+  q("#cli").addEventListener("click", function (e) { var b = e.target.closest("[data-hist]"); if (!b) return; var box = document.getElementById("hist_" + b.dataset.hist);
+    if (box.innerHTML) { box.innerHTML = ""; return; } box.textContent = "Carregando…";
+    Promise.all(chatsOf(b.dataset.hist).map(function (c) { return call({ action: "chatGet", id: c.id, peek: true }); })).then(function (L) {
+      box.innerHTML = L.map(function (c) { return '<div class="lst"><b>' + dt(c.criadoEm) + (c.orderId ? " · Pedido nº " + esc(c.orderId) : "") + (c.fechado ? " · fechada" : " · aberta") + '</b> <button class="ghost" style="padding:4px 8px" data-bubopen="' + c.id + '">Abrir</button><div class="cmsgs">' +
+        c.msgs.map(function (m) { return '<div class="cm ' + m.de + '">' + esc(m.txt) + "<small>" + dt(m.em) + "</small></div>"; }).join("") + "</div></div>"; }).join(""); }).catch(function (er) { box.textContent = er.message; }); });
+  q("#cli").addEventListener("click", function (e) { var b = e.target.closest("[data-bubopen]"); if (b && window.openChatBubble) openChatBubble(b.dataset.bubopen); });
   function filtered() {
     var qq = q("#qCli").value.toLowerCase().trim(), qd = qq.replace(/\D/g, ""), fd = q("#fDias").value, n = fd === "c" ? Number(q("#fDiasC").value || 0) : Number(fd || 0), showOpt = q("#fOpt").checked;
     return CL.filter(function (c) { var d = days(c);
@@ -30,8 +38,8 @@
       return '<div class="o"><h3><span><input type="checkbox" class="cchk" data-sel="' + c.tel + '"' + (sel.has(c.tel) ? " checked" : "") + (c.optOut ? " disabled" : "") + ">" + esc(c.nome || "—") + '</span><span class="st">' + brlFmt(c.totalGasto) + "</span></h3>" +
         '<div class="cust">📞 ' + esc(c.telOriginal || c.tel) + " · " + c.pedidos + " pedido(s) · último: " + (c.ultimoPedido ? dt(c.ultimoPedido) + " · <b>há " + d + " dia(s)</b>" : "—") + "<br>" +
         (e ? "📍 " + esc(e.rua || "") + ", " + esc(e.numero || "") + (e.complemento ? " - " + esc(e.complemento) : "") + " - " + esc(e.bairro || "") : "Retirada no local") +
-        (c.optOut ? '<br><span class="optout">🚫 Não quer receber mensagens</span>' : "") + "</div>" +
-        '<div class="krow"><a class="wa" target="_blank" href="https://wa.me/' + phone(c.tel) + '">📲 WhatsApp</a><button class="ghost" data-opt="' + c.tel + '" data-v="' + (c.optOut ? 0 : 1) + '">' + (c.optOut ? "Voltar a receber" : "🚫 Não quer receber") + "</button></div></div>";
+        '<div id="hist_' + c.tel + '"></div>' + (c.optOut ? '<br><span class="optout">🚫 Não quer receber mensagens</span>' : "") + "</div>" +
+        '<div class="krow"><a class="wa" target="_blank" href="https://wa.me/' + phone(c.tel) + '">📲 WhatsApp</a>' + (chatsOf(c.tel).length ? '<button class="ghost" data-hist="' + c.tel + '">💬 Histórico de conversas (' + chatsOf(c.tel).length + ")</button>" : "") + '<button class="ghost" data-opt="' + c.tel + '" data-v="' + (c.optOut ? 0 : 1) + '">' + (c.optOut ? "Voltar a receber" : "🚫 Não quer receber") + "</button></div></div>";
     }).join("");
     q("#selN").textContent = sel.size + " selecionado(s)";
   };

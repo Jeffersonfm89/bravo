@@ -7,7 +7,7 @@
     q("#chatBadge").hidden = !un; q("#chatBadge").textContent = un;
     q("#chatList").innerHTML = chats.length ? chats.map(function (c) {
       return '<div class="o chi" data-chat="' + c.id + '"><h3><span>' + esc(c.nome) + (c.unreadAdmin ? ' <span class="cbadge">' + c.unreadAdmin + "</span>" : "") + '</span><small class="est">' + t(c.atualizadoEm) + "</small></h3>" +
-        '<div class="cust">' + (c.tel ? "📞 " + esc(c.tel) + " · " : "") + (c.orderId ? "Pedido nº " + esc(c.orderId) + " · " : "") + c.n + " msg" + (c.humano ? " · atendimento humano" : "") + "<br>" +
+        '<div class="cust">' + (c.tel ? "📞 " + esc(c.tel) + " · " : "") + (c.orderId ? "Pedido nº " + esc(c.orderId) + " · " : "") + c.n + " msg" + (c.humano ? " · atendimento humano" : "") + (c.fechado ? " · <b>fechada</b>" : "") + "<br>" +
         (c.last ? (c.last.de === "cliente" ? "" : "Você: ") + esc(c.last.txt.slice(0, 80)) : "<i>sem mensagens</i>") + "</div></div>";
     }).join("") : "<p>Nenhuma conversa ainda.</p>";
   }
@@ -15,7 +15,7 @@
     return call({ action: "chats" }).then(function (d) {
       chats = d.chats; var un = chats.reduce(function (s, c) { return s + c.unreadAdmin; }, 0);
       if (lastUnread !== null && un > lastUnread && window.bravoAlert) { var c = chats.find(function (x) { return x.unreadAdmin; }); bravoAlert("NOVA MENSAGEM de " + (c ? c.nome : "cliente"), c && c.last ? c.last.txt.slice(0, 100) : ""); }
-      lastUnread = un; drawList(); if (cur && !q("#tChat").hidden) openChat(cur, true);
+      lastUnread = un; window.CHATS = chats; drawList(); if (window.onChats) onChats(chats); if (cur && !q("#tChat").hidden) openChat(cur, true);
     }).catch(function () {});
   };
   function drawChat(c) {

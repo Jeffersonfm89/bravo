@@ -32,13 +32,17 @@ module.exports = async (req, res) => {
       const os = await listOrders({ limit: 5000, from });
       return res.json({ orders: os.filter(o => !from || o.criadoEm >= from).map(({ pixQr, historico, ...o }) => o), settings: { mpPct: (await getSettings()).mpPct } });
     }
-    if (b.action === 'chats') return res.json({ chats: (await listChats()).map(c => ({ id: c.id, nome: c.nome, tel: c.tel, orderId: c.orderId, unreadAdmin: c.unreadAdmin || 0, n: c.msgs.length, last: c.msgs.slice(-1)[0] || null, atualizadoEm: c.atualizadoEm, humano: c.humano })) });
+    if (b.action === 'chats') return res.json({ chats: (await listChats()).map(c => ({ id: c.id, nome: c.nome, tel: c.tel, orderId: c.orderId, unreadAdmin: c.unreadAdmin || 0, n: c.msgs.length, last: c.msgs.slice(-1)[0] || null, atualizadoEm: c.atualizadoEm, humano: c.humano, fechado: !!c.fechado, fechadoEm: c.fechadoEm || null })) });
     if (b.action === 'chatGet' || b.action === 'chatReply') {
       const c = await getChat(String(b.id || '')); if (!c) return res.status(404).json({ error: 'Conversa não encontrada' });
       if (b.action === 'chatReply') { const txt = String(b.txt || '').trim().slice(0, 1000); if (!txt) throw bad('Mensagem vazia');
         c.msgs.push({ de: 'loja', txt, em: new Date().toISOString() }); c.unreadCliente = (c.unreadCliente || 0) + 1; c.humano = true; }
+      if (b.peek && b.action === 'chatGet') { const { token, ...out } = c; return res.json(out); } // só leitura (histórico do cliente)
       c.unreadAdmin = 0; await saveChat(c); const { token, ...out } = c; return res.json(out);
     }
+    if (b.action === 'chatClose') { const c = await getChat(String(b.id || '')); if (!c) return res.status(404).json({ error: 'Conversa não encontrada' });
+      c.fechado = true; c.fechadoEm = new Date().toISOString(); c.unreadAdmin = 0; await saveChat(c); return res.json({ ok: true }); }
+    if (b.action === 'chatDelete') { const c = await getChat(String(b.id || '')); if (!c) return res.status(404).json({ error: 'Conversa não encontrada' }); await require('@vercel/blob').del(`chats/${c.id}.json`); return res.json({ ok: true }); }
     if (b.action === 'setAi') { const s = await getSettings(); s.aiAuto = !!b.aiAuto; await saveSettings(s); return res.json({ aiAuto: s.aiAuto, aiKey: !!process.env.AI_API_KEY }); }
     if (b.action === 'optOut') { const c = await setOptOut(b.tel, b.optOut); if (!c) return res.status(404).json({ error: 'Cliente não encontrado' }); return res.json(c); }
     if (b.action === 'lists') return res.json({ lists: await allLists() });
