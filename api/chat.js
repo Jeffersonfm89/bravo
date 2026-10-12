@@ -33,7 +33,7 @@ module.exports = async (req, res) => {
       c.msgs.push({ de: 'cliente', txt, em: new Date().toISOString() }); c.unreadAdmin = (c.unreadAdmin || 0) + 1;
       if (!c.humano) { // resposta automática opcional (desligada por padrão)
         try { const st = await getSettings(); const o = c.orderId ? await getOrder(c.orderId) : null; const r = await aiReply(c, st, o);
-          if (r) { c.msgs.push({ de: 'bot', txt: r.txt, em: new Date().toISOString() }); if (r.handoff) c.humano = true; } } catch (e) { console.error('ai', e.message); }
+          if (r) { c.msgs.push({ de: 'bot', txt: r.txt, em: new Date().toISOString() }); c.unreadCliente = (c.unreadCliente || 0) + 1; if (r.handoff) { c.humano = true; c.precisaHumano = true; c.unreadAdmin = (c.unreadAdmin || 0) + 1; } } } catch (e) { console.error('ai', e.message); }
       }
       await saveChat(c); return res.json(pub(c));
     }

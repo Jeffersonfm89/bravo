@@ -21,7 +21,7 @@
   function drawChat(c) {
     q("#chatTitle").innerHTML = esc(c.nome) + (c.tel ? ' · <a style="color:#25d366" target="_blank" href="https://wa.me/' + phone(c.tel) + '">WhatsApp</a>' : "") + (c.orderId ? ' · <small>Pedido nº ' + esc(c.orderId) + "</small>" : "");
     var el = q("#chatMsgs"), bottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 30;
-    el.innerHTML = c.msgs.map(function (m) { return '<div class="cm ' + m.de + '">' + esc(m.txt) + "<small>" + (m.de === "bot" ? "IA · " : m.de === "loja" ? "Você · " : "") + t(m.em) + "</small></div>"; }).join("") || "<p class='cust'>Sem mensagens.</p>";
+    el.innerHTML = c.msgs.map(function (m) { return '<div class="cm ' + m.de + '">' + esc(m.txt) + "<small>" + (m.de === "bot" ? "🤖 Assistente Bravo (IA) · " : m.de === "loja" ? "Você · " : "") + t(m.em) + "</small></div>"; }).join("") || "<p class='cust'>Sem mensagens.</p>";
     if (bottom) el.scrollTop = 1e6;
   }
   function openChat(id, silent) {
@@ -33,7 +33,7 @@
   q("#chatForm").onsubmit = function (e) { e.preventDefault(); var i = e.target.txt, txt = i.value.trim(); if (!txt || !cur) return; i.value = "";
     call({ action: "chatReply", id: cur, txt: txt }).then(function (c) { drawChat(c); q("#chatMsgs").scrollTop = 1e6; }).catch(function (er) { alert(er.message); i.value = txt; }); };
   q("#aiAuto").onchange = function () { var on = this.checked; call({ action: "setAi", aiAuto: on }).then(aiInfo).catch(function (e) { alert(e.message); }); };
-  function aiInfo(s) { q("#aiAuto").checked = !!s.aiAuto; q("#aiInfo").textContent = s.aiKey ? (s.aiAuto ? "(ligada)" : "(desligada)") : "(sem chave AI_API_KEY configurada — não responde mesmo ligada)"; }
+  function aiInfo(s) { q("#aiAuto").checked = s.aiAuto !== false; q("#aiInfo").textContent = s.aiKey ? (s.aiAuto ? "(ligada)" : "(desligada)") : "(sem chave AI_API_KEY configurada — não responde mesmo ligada)"; }
   window.chatStart = function () { if (started) return; started = true; loadChats(); setInterval(loadChats, 10000); call({ action: "getSettings" }).then(aiInfo).catch(function () {}); };
   if (!q("#panel").hidden) window.chatStart();
 })();

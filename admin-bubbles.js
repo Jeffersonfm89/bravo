@@ -22,19 +22,21 @@
   function t(d) { return new Date(d).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" }); }
   function draw() {
     bw.innerHTML = Object.keys(st).filter(function (id) { return byId[id]; }).map(function (id) { var c = byId[id], un = st[id] === "open" ? 0 : c.unreadAdmin;
-      return '<div class="cbub' + (un ? " pulse" : "") + '" data-b="' + id + '" title="' + esc(c.nome) + '">' + esc(ini(c.nome)) + (un ? '<span class="bn">' + un + "</span>" : "") + '<span class="bl">' + esc(c.nome) + "</span></div>"; }).join("");
+      return '<div class="cbub' + (un ? " pulse" : "") + '" data-b="' + id + '" title="' + esc(c.nome) + '">' + esc(ini(c.nome)) + (un ? '<span class="bn">' + un + "</span>" : "") + '<span class="bl">' + (c.precisaHumano ? "🙋 " : "") + esc(c.nome) + (c.precisaHumano ? " quer atendente" : "") + "</span></div>"; }).join("");
     Object.keys(st).forEach(function (id) { var w = document.getElementById("cw_" + id); if (st[id] === "open" && byId[id] && !w) mkWin(id); if (st[id] !== "open" && w) { w.remove(); clearInterval(timers[id]); } });
   }
   function msgs(id) { var c = data[id], el = document.querySelector("#cw_" + id + " .wm"); if (!c || !el) return; var bottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 30;
-    el.innerHTML = c.msgs.map(function (m) { return '<div class="cm ' + m.de + '">' + esc(m.txt) + "<small>" + (m.de === "loja" ? "Você · " : m.de === "bot" ? "IA · " : "") + t(m.em) + "</small></div>"; }).join("") || "<p class='cust'>Sem mensagens.</p>"; if (bottom) el.scrollTop = 1e6; }
+    el.innerHTML = c.msgs.map(function (m) { return '<div class="cm ' + m.de + '">' + esc(m.txt) + "<small>" + (m.de === "loja" ? "Você · " : m.de === "bot" ? "🤖 Assistente Bravo (IA) · " : "") + t(m.em) + "</small></div>"; }).join("") || "<p class='cust'>Sem mensagens.</p>"; if (bottom) el.scrollTop = 1e6;
+    var tg = document.querySelector("#cw_" + id + " [data-ai]"); if (tg) { tg.dataset.h = c.humano ? 1 : 0; tg.textContent = c.humano ? "👤 Humano" : "🤖 IA ativa"; tg.title = c.humano ? "Atendimento humano (IA não responde). Clique para devolver à IA" : "IA respondendo. Clique para assumir (humano)"; } }
   function fetchC(id) { return call({ action: "chatGet", id: id }).then(function (c) { data[id] = c; if (byId[id]) byId[id].unreadAdmin = 0; msgs(id); }).catch(function () {}); }
   function mkWin(id) { var c = byId[id], w = document.createElement("div"); w.className = "cwin"; w.id = "cw_" + id;
     w.innerHTML = "<header><span>" + esc(c.nome) + (c.orderId ? " · nº " + esc(c.orderId) : "") + "</span>" + (c.tel ? '<a target="_blank" style="color:#111" href="https://wa.me/' + phone(c.tel) + '">📲</a>' : "") +
-      '<button data-min="' + id + '" title="Minimizar">—</button><button data-close="' + id + '" title="Fechar">✕</button></header><div class="wm">Carregando…</div><form data-f="' + id + '"><input name="txt" maxlength="1000" placeholder="Responder…" autocomplete="off"><button>Enviar</button></form>';
+      '<button data-ai="' + id + '">…</button><button data-min="' + id + '" title="Minimizar">—</button><button data-close="' + id + '" title="Fechar">✕</button></header><div class="wm">Carregando…</div><form data-f="' + id + '"><input name="txt" maxlength="1000" placeholder="Responder…" autocomplete="off"><button>Enviar</button></form>';
     ww.appendChild(w); fetchC(id).then(function () { w.querySelector(".wm").scrollTop = 1e6; }); clearInterval(timers[id]); timers[id] = setInterval(function () { fetchC(id); }, 4000); }
   function open(id) { if (mob()) Object.keys(st).forEach(function (k) { if (k !== id && st[k] === "open") st[k] = "bubble"; }); st[id] = "open"; save(); draw(); }
   bw.addEventListener("click", function (e) { var b = e.target.closest("[data-b]"); if (!b) return; var id = b.dataset.b; if (st[id] === "open") { st[id] = "bubble"; save(); draw(); } else open(id); });
   ww.addEventListener("click", function (e) { var m = e.target.closest("[data-min]"), x = e.target.closest("[data-close]");
+    var ai = e.target.closest("[data-ai]"); if (ai) { var id0 = ai.dataset.ai; call({ action: "chatHumano", id: id0, humano: ai.dataset.h !== "1" }).then(function (c) { data[id0] = c; msgs(id0); }).catch(function (er) { alert(er.message); }); }
     if (m) { st[m.dataset.min] = "bubble"; save(); draw(); }
     if (x) { var id = x.dataset.close; delete st[id]; save(); draw(); if (byId[id]) byId[id].fechado = true; call({ action: "chatClose", id: id }).then(function () { if (window.loadChats) loadChats(); }).catch(function (er) { alert(er.message); }); } });
   ww.addEventListener("submit", function (e) { e.preventDefault(); var id = e.target.dataset.f, i = e.target.txt, txt = i.value.trim(); if (!txt) return; i.value = "";
@@ -48,7 +50,9 @@
   bell.onclick = function () { var c = Object.keys(byId).map(function (k) { return byId[k]; }).find(function (x) { return x.unreadAdmin && !x.fechado; });
     if (c) open(c.id); else { var t = document.querySelector('[data-t=tChat]'); if (t) t.click(); } };
   var oc = window.onChats; window.onChats = function (chats) { oc(chats); var un = chats.reduce(function (s, c) { return s + (c.fechado ? 0 : c.unreadAdmin); }, 0), n = bell.querySelector(".bn"); n.hidden = !un; n.textContent = un; bell.hidden = false; };
-  var ac; window.chatDing = function () { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); var o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
-    o.type = "sine"; o.frequency.setValueAtTime(1046, t); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
-    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + 0.65); } catch (_) {} };
+  var ac; window.chatDing = function () { // "plim-plim": 2 notas agudas, suave, toca 1 vez (diferente do alarme de pedido)
+    try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === "suspended") ac.resume(); var t0 = ac.currentTime;
+      [[1568, 0], [2093, 0.16]].forEach(function (n) { var o = ac.createOscillator(), g = ac.createGain(), t = t0 + n[1];
+        o.type = "sine"; o.frequency.setValueAtTime(n[0], t); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+        o.connect(g).connect(ac.destination); o.start(t); o.stop(t + 0.4); }); } catch (_) {} };
 })();

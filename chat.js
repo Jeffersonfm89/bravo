@@ -28,7 +28,7 @@
   function draw(c) {
     var m = c.msgs || [];
     $(".cw-msgs").innerHTML = '<div class="cw-m loja">Olá, ' + e(c.nome) + '! Como podemos ajudar?' + (c.orderId ? "<small>Pedido nº " + e(c.orderId) + "</small>" : "") + "</div>" +
-      m.map(function (x) { return '<div class="cw-m ' + x.de + '">' + e(x.txt) + "<small>" + (x.de === "bot" ? "Assistente automático · " : x.de === "loja" ? "Bravo · " : "") + new Date(x.em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) + "</small></div>"; }).join("");
+      m.map(function (x) { return '<div class="cw-m ' + x.de + '">' + e(x.txt) + "<small>" + (x.de === "bot" ? "🤖 Assistente Bravo (IA) · " : x.de === "loja" ? "Bravo · " : "") + new Date(x.em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) + "</small></div>"; }).join("");
     if (m.length !== lastN) { $(".cw-msgs").scrollTop = 1e6; }
     var replies = m.filter(function (x) { return x.de !== "cliente"; }).length, seen = Number(LS.getItem(KEY + "Seen") || 0);
     if (open) LS.setItem(KEY + "Seen", replies); else if (replies > seen) { $(".cw-badge").hidden = false; $(".cw-badge").textContent = replies - seen; }
