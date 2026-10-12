@@ -42,6 +42,12 @@ module.exports = async (req, res) => {
     }
     if (b.action === 'chatHumano') { const c = await getChat(String(b.id || '')); if (!c) return res.status(404).json({ error: 'Conversa não encontrada' });
       c.humano = !!b.humano; if (!c.humano) c.precisaHumano = false; await saveChat(c); const { token, ...out } = c; return res.json(out); }
+    if (b.action === 'aiUsage') { const s = await getSettings(); return res.json({ ...(await require('./_lib/aiusage').summary(s)), aiAuto: s.aiAuto !== false, aiKey: !!process.env.AI_API_KEY }); }
+    if (b.action === 'aiBudget') { const s = await getSettings(), n = v => Number(String(v).replace(',', '.'));
+      if (b.budgetUsd !== undefined) { const v = n(b.budgetUsd); if (!(v >= 0 && v <= 1000)) throw bad('Orçamento inválido'); s.aiBudgetUsd = v; }
+      if (b.fxBrl !== undefined) { const v = n(b.fxBrl); if (!(v > 1 && v < 20)) throw bad('Câmbio inválido'); s.fxBrl = v; }
+      if (b.prices) { const p = {}; ['in', 'cached', 'out'].forEach(k => { if (b.prices[k] !== undefined) { const v = n(b.prices[k]); if (!(v >= 0 && v < 100)) throw bad('Preço inválido'); p[k] = v; } }); s.aiPrices = { ...(s.aiPrices || {}), ...p }; }
+      await saveSettings(s); return res.json(await require('./_lib/aiusage').summary(s)); }
     if (b.action === 'chatClose') { const c = await getChat(String(b.id || '')); if (!c) return res.status(404).json({ error: 'Conversa não encontrada' });
       c.fechado = true; c.fechadoEm = new Date().toISOString(); c.unreadAdmin = 0; await saveChat(c); return res.json({ ok: true }); }
     if (b.action === 'chatDelete') { const c = await getChat(String(b.id || '')); if (!c) return res.status(404).json({ error: 'Conversa não encontrada' }); await require('@vercel/blob').del(`chats/${c.id}.json`); return res.json({ ok: true }); }

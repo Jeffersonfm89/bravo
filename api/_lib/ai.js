@@ -1,6 +1,8 @@
 // Resposta automática por IA no chat (OpenAI). Liga/desliga global no painel (padrão LIGADO) e por conversa (modo humano).
 // Precisa de env AI_API_KEY. Modelo: AI_MODEL (padrão gpt-4o-mini).
 const { PRODUCTS, brlFmt, PASTEL_ADDS } = require('../../products.js');
+const usage = require('./aiusage');
+const ACK = 'Recebemos sua mensagem! Já já te respondemos 🙂';
 const MAX_PER_DAY = 15, MAX_TOKENS = 220;
 const HUMAN_RE = /\b(atendente|humano|humana|pessoa|algu[eé]m|gerente|dono|respons[aá]vel|operador|falar com|reclama|cancelar|cancelamento|estorno|reembolso)\b/i;
 const HANDOFF_MSG = 'Certo! Já chamei um atendente da Bravo 🙂 Em instantes uma pessoa responde por aqui.';
@@ -30,13 +32,16 @@ async function aiReply(chat, st, order) {
   const day = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
   if (!chat.aiDia || chat.aiDia.d !== day) chat.aiDia = { d: day, n: 0 };
   if (chat.aiDia.n >= MAX_PER_DAY) return { txt: HANDOFF_MSG, handoff: true };
+  const sm = await usage.summary(st).catch(() => null);
+  if (sm && sm.blocked) return { txt: ACK, handoff: true, auto: true, budget: true }; // orçamento do mês (90%) atingido
   chat.aiDia.n++;
   const msgs = [{ role: 'system', content: sysPrompt(st, order) }].concat(chat.msgs.slice(-10).map(m => ({ role: m.de === 'cliente' ? 'user' : 'assistant', content: String(m.txt).slice(0, 500) })));
   const r = await fetch(process.env.AI_API_URL || 'https://api.openai.com/v1/chat/completions', {
     method: 'POST', headers: { Authorization: 'Bearer ' + process.env.AI_API_KEY.trim(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ model: process.env.AI_MODEL || 'gpt-4o-mini', messages: msgs, max_tokens: MAX_TOKENS, temperature: 0.2 }), signal: AbortSignal.timeout(8000) });
-  if (!r.ok) throw new Error('IA ' + r.status);
-  let txt = ((await r.json()).choices?.[0]?.message?.content || '').trim(); if (!txt) return null;
+  if (!r.ok) { await usage.record(st, null, false).catch(() => {}); throw new Error('IA ' + r.status); }
+  const j = await r.json(); await usage.record(st, j.usage, true).catch(e => console.error('uso IA', e.message));
+  let txt = (j.choices?.[0]?.message?.content || '').trim(); if (!txt) return null;
   const handoff = /\[HUMANO\]/i.test(txt); txt = txt.replace(/\[HUMANO\]/gi, '').trim().slice(0, 600) || HANDOFF_MSG;
   return { txt, handoff };
 }

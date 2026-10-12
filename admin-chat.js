@@ -37,3 +37,25 @@
   window.chatStart = function () { if (started) return; started = true; loadChats(); setInterval(loadChats, 10000); call({ action: "getSettings" }).then(aiInfo).catch(function () {}); };
   if (!q("#panel").hidden) window.chatStart();
 })();
+/* Uso da IA: custo estimado e orçamento mensal */
+(function () {
+  var q = function (s) { return document.querySelector(s); };
+  var box = document.createElement("div"); box.id = "aiUse"; box.className = "o"; box.style.margin = "8px 0";
+  var anchor = q("#aiAuto").closest("label"); anchor.after(box);
+  var usd = function (v) { return "US$ " + Number(v || 0).toFixed(4); }, brl = function (v) { return "R$ " + Number(v || 0).toFixed(2).replace(".", ","); };
+  function draw(u) {
+    box.innerHTML = "<h3 style='margin:0 0 6px'>🤖 Uso da IA <small class='est'>" + esc(u.model) + "</small></h3>" +
+      (u.blocked ? "<p style='color:#ff5252;font-weight:800'>⚠️ " + u.pctBudget + "% do orçamento do mês usado: a IA está PAUSADA (clientes recebem a mensagem automática e vão para atendimento humano). Aumente o orçamento para religar.</p>" :
+        u.pctBudget >= 70 ? "<p style='color:#f5b400;font-weight:700'>⚠️ " + u.pctBudget + "% do orçamento do mês usado (pausa em " + u.stopAtPct + "%).</p>" : "") +
+      (u.dailySoftExceeded ? "<p style='color:#f5b400'>⚠️ Hoje passou do limite diário sugerido (" + usd(u.dailySoftLimitUsd) + ").</p>" : "") +
+      "<div class='cust'><b>Hoje:</b> " + u.today.replies + " respostas · " + (u.today.in + u.today.out) + " tokens · " + usd(u.today.usd) + " (" + brl(u.today.brl) + ")" + (u.today.erros ? " · " + u.today.erros + " falhas" : "") +
+      "<br><b>Mês (" + esc(u.mes) + "):</b> " + u.month.replies + " respostas · " + (u.month.in + u.month.out) + " tokens · " + usd(u.month.usd) + " (" + brl(u.month.brl) + ") · <b>" + u.pctBudget + "%</b> do orçamento" +
+      "<div style='height:8px;background:#333;border-radius:4px;margin:6px 0'><div style='height:8px;border-radius:4px;width:" + Math.min(100, u.pctBudget) + "%;background:" + (u.blocked ? "#ff5252" : "#f5b400") + "'></div></div>" +
+      "Orçamento mensal: US$ <input id='aiBud' value='" + u.budgetUsd + "' inputmode='decimal' style='width:70px'> · câmbio R$ <input id='aiFx' value='" + u.fxBrl + "' inputmode='decimal' style='width:60px'> <button class='go' id='aiBudSave' style='padding:6px 12px;width:auto'>Salvar</button>" +
+      "<br><small>Limite diário sugerido: " + usd(u.dailySoftLimitUsd) + " · Preços (US$/1M tokens): entrada " + u.prices.in + ", cache " + u.prices.cached + ", saída " + u.prices.out + " · estimativa</small></div>";
+    q("#aiBudSave").onclick = function () { call({ action: "aiBudget", budgetUsd: q("#aiBud").value, fxBrl: q("#aiFx").value }).then(draw).catch(function (e) { alert(e.message); }); };
+  }
+  function load() { if (q("#tChat").hidden) return; call({ action: "aiUsage" }).then(draw).catch(function (e) { box.textContent = "Uso da IA: " + e.message; }); }
+  q("#atabs").addEventListener("click", function (e) { if (e.target.dataset && e.target.dataset.t === "tChat") setTimeout(load, 50); });
+  setInterval(load, 60000);
+})();

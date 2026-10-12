@@ -55,4 +55,4 @@ async function allLists() { return (await mapLimit(await listKeys('lists/'), 25,
 const { del } = require('@vercel/blob');
 const delList = id => del(LKEY(id));
 const getCustomer = tel => { const k = telKey(tel); return k ? getJSON(`customers/${k}.json`) : null; };
-module.exports = { getCustomer, setOptOut, getList, saveList, allLists, delList, getChat, saveChat, listChats, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings, telKey };
+module.exports = { getJSON, putJSON, getCustomer, setOptOut, getList, saveList, allLists, delList, getChat, saveChat, listChats, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings, telKey };
