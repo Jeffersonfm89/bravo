@@ -10,7 +10,9 @@ var PASTEL_ADDS = [
 function addsGroup() { return { id: "add", padds: true, label: "Adicionais", type: "multi", min: 0, max: PASTEL_ADDS.length, choices: PASTEL_ADDS }; }
 function semGroup(ings) { return { id: "sem", label: "Tirar algo", type: "multi", min: 0, max: ings.length, choices: ings.map(function (n) { return { id: n.toLowerCase().normalize("NFD").replace(/[^a-z]/g, ""), name: "Sem " + n, price: 0 }; }) }; }
 // ings = ingredientes do próprio pastel (viram as opções de "Tirar algo")
-function pastel(id, name, desc, price, ings) { return { id: id, cat: "Pastéis", name: name, desc: desc, price: price, img: "img/" + id + ".jpg", nota: true, options: [semGroup(ings), addsGroup()] }; }
+// Tamanho do pastel (obrigatório): G = preço informado, M = G − R$ 5. O preço base fica 0.
+function tamGroup(g) { return { id: "tam", label: "Tamanho", type: "single", min: 1, max: 1, choices: [{ id: "M", name: "Médio (M)", price: Math.round((g - 5) * 100) / 100 }, { id: "G", name: "Grande (G)", price: g }] }; }
+function pastel(id, name, desc, price, ings) { return { id: id, cat: "Pastéis", name: name, desc: desc, price: 0, img: "img/" + id + ".jpg", nota: true, options: [tamGroup(price), semGroup(ings), addsGroup()] }; }
 /* Aplica preços de adicionais salvos no painel: { calabresa: 8, ... } */
 function applyAddPrices(map) { if (!map) return; var setP = function (a) { var v = Number(map[a.id]); if (map[a.id] != null && map[a.id] !== '' && v >= 0 && v <= 100) a.price = Math.round(v * 100) / 100; };
   PASTEL_ADDS.forEach(setP); if (typeof PRODUCTS !== 'undefined') PRODUCTS.forEach(function (p) { (p.options || []).forEach(function (g) { if (g.padds) g.choices.forEach(setP); }); }); }
@@ -27,8 +29,8 @@ var PRODUCTS = [
   pastel("p-bacon", "Pastel de Bacon", "Bacon", 18.00, ["Bacon"]),
   pastel("p-bacon-catupiry", "Pastel de Bacon com Catupiry", "Bacon e Catupiry", 18.00, ["Bacon", "Catupiry"]),
   pastel("p-bacon-requeijao", "Pastel de Bacon com Requeijão", "Bacon e requeijão", 18.00, ["Bacon", "Requeijão"]),
-  { id: "p-personalizado", cat: "Pastéis", name: "Pastel Personalizado", desc: "Monte do seu jeito: escolha até 4 ingredientes", price: 20.00, img: "img/p-personalizado.jpg", nota: true,
-    options: [{ id: "ing", label: "Ingredientes", type: "multi", min: 1, max: 4, choices: [
+  { id: "p-personalizado", cat: "Pastéis", name: "Pastel Personalizado", desc: "Monte do seu jeito: escolha até 4 ingredientes", price: 0, img: "img/p-personalizado.jpg", nota: true,
+    options: [tamGroup(20), { id: "ing", label: "Ingredientes", type: "multi", min: 1, max: 4, choices: [
       { id: "frango", name: "Frango", price: 0 }, { id: "carne", name: "Carne", price: 0 }, { id: "ovo", name: "Ovo", price: 0 },
       { id: "mussarela", name: "Queijo mussarela", price: 0 }, { id: "presunto", name: "Presunto", price: 0 }, { id: "calabresa", name: "Calabresa", price: 0 },
       { id: "bacon", name: "Bacon", price: 0 }, { id: "catupiry", name: "Catupiry", price: 0 }, { id: "requeijao", name: "Requeijão", price: 0 },
@@ -78,8 +80,8 @@ function priceItem(p, opts, nota) {
     names = g.choices.filter(function (c) { return sel.indexOf(c.id) >= 0; }).map(function (c) { return c.name; });
     if (names.length) parts.push(g.type === 'single' ? names.join('') : g.id === 'sem' ? names.map(function (n) { return n.toUpperCase(); }).join(', ') : (g.id === 'add' ? '+ ' : '') + names.join(', '));
   });
-  if (nota) parts.push('· Obs: ' + nota);
-  return { unit: Math.round(unit * 100) / 100, detalhe: parts.join(' '), opts: norm, nota: nota };
+  if (nota) parts.push('Obs: ' + nota);
+  return { unit: Math.round(unit * 100) / 100, detalhe: parts.join(' · '), opts: norm, nota: nota };
 }
 
 /* Taxa de entrega: número (ex.: 5.00) = valor fixo; null = "a combinar". Retirada é sempre R$ 0,00.
