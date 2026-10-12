@@ -27,8 +27,8 @@ var PRODUCTS = [
   pastel("p-bacon", "Pastel de Bacon", "Bacon", 18.00, ["Bacon"]),
   pastel("p-bacon-catupiry", "Pastel de Bacon com Catupiry", "Bacon e Catupiry", 18.00, ["Bacon", "Catupiry"]),
   pastel("p-bacon-requeijao", "Pastel de Bacon com Requeijão", "Bacon e requeijão", 18.00, ["Bacon", "Requeijão"]),
-  { id: "p-personalizado", cat: "Pastéis", name: "Pastel Personalizado", desc: "Monte do seu jeito: escolha os ingredientes", price: 20.00, img: "img/p-personalizado.jpg", nota: true,
-    options: [{ id: "ing", label: "Ingredientes", type: "multi", min: 1, max: 6, choices: [
+  { id: "p-personalizado", cat: "Pastéis", name: "Pastel Personalizado", desc: "Monte do seu jeito: escolha até 4 ingredientes", price: 20.00, img: "img/p-personalizado.jpg", nota: true,
+    options: [{ id: "ing", label: "Ingredientes", type: "multi", min: 1, max: 4, choices: [
       { id: "frango", name: "Frango", price: 0 }, { id: "carne", name: "Carne", price: 0 }, { id: "ovo", name: "Ovo", price: 0 },
       { id: "mussarela", name: "Queijo mussarela", price: 0 }, { id: "presunto", name: "Presunto", price: 0 }, { id: "calabresa", name: "Calabresa", price: 0 },
       { id: "bacon", name: "Bacon", price: 0 }, { id: "catupiry", name: "Catupiry", price: 0 }, { id: "requeijao", name: "Requeijão", price: 0 },
