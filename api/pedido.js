@@ -5,6 +5,7 @@ const { cors, mp, body, fail, bad, clean } = require('./_lib/common');
 const { saveOrder, getOrder, touchCustomer, getSettings, getCustomer } = require('./_lib/store');
 const { checkRef, addrList, mask } = require('./_lib/addr');
 const { markPaid } = require('./_lib/paid');
+const sec = require('./_lib/security');
 const { buildBreakdown, applyAddPrices } = require('../products.js');
 const PAGS = ['Pix', 'Cartão', 'Dinheiro na entrega'];
 function newId() { const d = new Date(Date.now() - 3 * 3600e3); return d.toISOString().slice(2, 10).replace(/-/g, '') + '-' + crypto.randomBytes(4).toString('hex').toUpperCase(); }
@@ -13,7 +14,9 @@ function publicView(o) { const { pixQr, ...rest } = o; // endereço vindo de add
 async function refreshPix(o) {
   if (!o.pixId || o.pago) return o;
   const p = await mp('/v1/payments/' + o.pixId);
-  if (p.status !== o.pixStatus) { o.pixStatus = p.status; if (p.status === 'approved') markPaid(o, p); await saveOrder(o); }
+  if (p.status !== o.pixStatus) { o.pixStatus = p.status;
+    if (p.status === 'approved') { if (String(p.external_reference) === o.id && Math.abs(Number(p.transaction_amount) - o.total) < 0.01) markPaid(o, p); else await sec.logEvent('pix_divergente', { pedido: o.id, pix: p.id }); }
+    await saveOrder(o); }
   return o;
 }
 module.exports = async (req, res) => {
@@ -43,6 +46,7 @@ module.exports = async (req, res) => {
       cliente.end = `${cliente.rua}, ${cliente.numero}${cliente.complemento ? ' - ' + cliente.complemento : ''} - ${cliente.bairro}, Joinville${cliente.referencia ? ' (Ref.: ' + cliente.referencia + ')' : ''}`;
     }
     const pagamento = PAGS.includes(b.pagamento) ? b.pagamento : null; if (!pagamento) throw bad('Forma de pagamento inválida');
+    if (!(await sec.orderLimit(sec.ipOf(req), cliente.tel).catch(() => true))) return res.status(429).json({ error: 'Você fez vários pedidos em pouco tempo 😅 Aguarde uns minutinhos ou fale com a gente no WhatsApp.' });
     if (!Array.isArray(b.items) || !b.items.length || b.items.length > 50) throw bad('Carrinho inválido');
     applyAddPrices((await getSettings()).pastelAdds);   // preços de adicionais definidos no painel
     let br; try { br = buildBreakdown(b.items, cliente.tipo, fee); } catch (e) { throw bad(e.message); }   // preços SEMPRE do servidor

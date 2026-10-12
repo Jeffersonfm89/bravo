@@ -4,6 +4,7 @@ const { cors, body, fail, bad } = require('./_lib/common');
 const { setOptOut, getList, saveList, allLists, delList, getChat, saveChat, listChats, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings } = require('./_lib/store');
 const { ORDER_STATUSES, PASTEL_ADDS } = require('../products.js');
 const { refreshPix } = require('./pedido.js');
+const sec = require('./_lib/security');
 function authed(req) {
   const want = process.env.ADMIN_PASSWORD || ''; const got = String(req.headers['x-admin-password'] || '');
   if (!want) return false;
@@ -13,9 +14,16 @@ function authed(req) {
 module.exports = async (req, res) => {
   if (cors(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' });
-  if (!authed(req)) { await new Promise(r => setTimeout(r, 800)); return res.status(401).json({ error: 'Senha incorreta' }); }
+  const ip = sec.ipOf(req);
+  const until = await sec.loginBlocked(ip).catch(() => 0);
+  if (until) { const min = Math.ceil((until - Date.now()) / 60e3); res.setHeader('Retry-After', String(min * 60)); return res.status(429).json({ error: `Muitas tentativas de senha. Tente de novo em ${min} min.` }); }
+  if (!authed(req)) { await new Promise(r => setTimeout(r, 800)); const blk = await sec.loginFail(ip).catch(() => 0);
+    if (blk) return res.status(429).json({ error: 'Muitas tentativas de senha. Acesso bloqueado por 15 min.' });
+    return res.status(401).json({ error: 'Senha incorreta' }); }
+  await sec.loginOk(ip).catch(() => {});
   try {
     const b = body(req); res.setHeader('Cache-Control', 'no-store');
+    if (b.action === 'securityLog') return res.json({ log: await sec.readLog(Number(b.days) || 7) });
     if (b.action === 'list') {
       const os = await listOrders({ limit: 150 });
       // atualiza no Mercado Pago os Pix pendentes recentes (até 2h), caso o webhook não tenha chegado

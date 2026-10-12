@@ -1,4 +1,4 @@
-const ALLOWED = ['https://jeffersonfm89.github.io', process.env.SITE_ORIGIN].filter(Boolean);
+const ALLOWED = ['https://jeffersonfm89.github.io', 'https://bravojoinville.com.br', 'https://www.bravojoinville.com.br', process.env.SITE_ORIGIN].filter(Boolean);
 function cors(req, res) {
   const o = req.headers.origin || '';
   if (ALLOWED.includes(o) || /^https:\/\/bravo[a-z0-9-]*\.vercel\.app$/.test(o)) {
