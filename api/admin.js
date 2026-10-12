@@ -64,7 +64,7 @@ module.exports = async (req, res) => {
     if (b.action === 'lists') return res.json({ lists: await allLists() });
     if (b.action === 'listCreate' || b.action === 'listUpdate') {
       let l;
-      if (b.action === 'listCreate') { const nome = String(b.nome || '').trim().slice(0, 60); if (!nome) throw bad('Dê um nome para a lista'); l = { id: crypto.randomBytes(6).toString('hex'), nome, template: 'Olá, {nome}! Sentimos sua falta aqui na Bravo 👑 Que tal um pastel hoje? Peça em ' + (process.env.SITE_URL || 'https://bravo-sage.vercel.app') + ' 😋', itens: [], criadoEm: new Date().toISOString() }; }
+      if (b.action === 'listCreate') { const nome = String(b.nome || '').trim().slice(0, 60); if (!nome) throw bad('Dê um nome para a lista'); l = { id: crypto.randomBytes(6).toString('hex'), nome, template: 'Olá, {nome}! Sentimos sua falta aqui na Bravo 👑 Que tal um pastel hoje? Peça em ' + (process.env.SITE_URL || 'https://bravojoinville.com.br') + ' 😋', itens: [], criadoEm: new Date().toISOString() }; }
       else { l = await getList(b.id); if (!l) return res.status(404).json({ error: 'Lista não encontrada' }); }
       if (b.nome !== undefined && b.action === 'listUpdate') l.nome = String(b.nome).trim().slice(0, 60) || l.nome;
       if (b.template !== undefined) l.template = String(b.template).slice(0, 1000);

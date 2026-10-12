@@ -2,10 +2,10 @@
 (function () {
   var q = function (s) { return document.querySelector(s); }, sel = new Set(), LISTS = [], curL = null;
   var TPL = [
-    ["Saudade", "Olá, {nome}! Sentimos sua falta aqui na Bravo 👑 Que tal um pastel quentinho hoje? Peça em https://bravo-sage.vercel.app 😋"],
-    ["Promo do dia", "Oi, {nome}! Hoje tem promoção na Bravo 🔥 Peça pelo site https://bravo-sage.vercel.app e aproveite!"],
-    ["Açaí", "{nome}, já experimentou nosso Açaí na Garrafa? 💜 Geladinho e cremoso! Peça em https://bravo-sage.vercel.app"],
-    ["Fim de semana", "Fim de semana é dia de Bravo, {nome}! 👑 Pastéis fresquinhos te esperando: https://bravo-sage.vercel.app"]];
+    ["Saudade", "Olá, {nome}! Sentimos sua falta aqui na Bravo 👑 Que tal um pastel quentinho hoje? Peça em https://bravojoinville.com.br 😋"],
+    ["Promo do dia", "Oi, {nome}! Hoje tem promoção na Bravo 🔥 Peça pelo site https://bravojoinville.com.br e aproveite!"],
+    ["Açaí", "{nome}, já experimentou nosso Açaí na Garrafa? 💜 Geladinho e cremoso! Peça em https://bravojoinville.com.br"],
+    ["Fim de semana", "Fim de semana é dia de Bravo, {nome}! 👑 Pastéis fresquinhos te esperando: https://bravojoinville.com.br"]];
   function days(c) { return c.ultimoPedido ? Math.floor((Date.now() - new Date(c.ultimoPedido)) / 864e5) : null; }
   function dt(d) { return new Date(d).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }); }
   var css = document.createElement("style");
