@@ -21,7 +21,7 @@
   function drawChat(c) {
     q("#chatTitle").innerHTML = esc(c.nome) + (c.tel ? ' · <a style="color:#25d366" target="_blank" href="https://wa.me/' + phone(c.tel) + '">WhatsApp</a>' : "") + (c.orderId ? ' · <small>Pedido nº ' + esc(c.orderId) + "</small>" : "");
     var el = q("#chatMsgs"), bottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 30;
-    el.innerHTML = c.msgs.map(function (m) { return '<div class="cm ' + m.de + '">' + esc(m.txt) + "<small>" + (m.de === "bot" ? "🤖 Assistente Bravo (IA) · " : m.de === "loja" ? "Você · " : "") + t(m.em) + "</small></div>"; }).join("") || "<p class='cust'>Sem mensagens.</p>";
+    el.innerHTML = c.msgs.map(function (m) { return '<div class="cm ' + m.de + '">' + esc(m.txt) + "<small>" + (m.de === "bot" ? (m.auto ? "⚙️ Mensagem automática · " : "🤖 Assistente Bravo (IA) · ") : m.de === "loja" ? "Você · " : "") + t(m.em) + "</small></div>"; }).join("") || "<p class='cust'>Sem mensagens.</p>";
     if (bottom) el.scrollTop = 1e6;
   }
   function openChat(id, silent) {

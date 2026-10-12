@@ -26,7 +26,7 @@
     Object.keys(st).forEach(function (id) { var w = document.getElementById("cw_" + id); if (st[id] === "open" && byId[id] && !w) mkWin(id); if (st[id] !== "open" && w) { w.remove(); clearInterval(timers[id]); } });
   }
   function msgs(id) { var c = data[id], el = document.querySelector("#cw_" + id + " .wm"); if (!c || !el) return; var bottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 30;
-    el.innerHTML = c.msgs.map(function (m) { return '<div class="cm ' + m.de + '">' + esc(m.txt) + "<small>" + (m.de === "loja" ? "Você · " : m.de === "bot" ? "🤖 Assistente Bravo (IA) · " : "") + t(m.em) + "</small></div>"; }).join("") || "<p class='cust'>Sem mensagens.</p>"; if (bottom) el.scrollTop = 1e6;
+    el.innerHTML = c.msgs.map(function (m) { return '<div class="cm ' + m.de + '">' + esc(m.txt) + "<small>" + (m.de === "loja" ? "Você · " : m.de === "bot" ? (m.auto ? "⚙️ Mensagem automática · " : "🤖 Assistente Bravo (IA) · ") : "") + t(m.em) + "</small></div>"; }).join("") || "<p class='cust'>Sem mensagens.</p>"; if (bottom) el.scrollTop = 1e6;
     var tg = document.querySelector("#cw_" + id + " [data-ai]"); if (tg) { tg.dataset.h = c.humano ? 1 : 0; tg.textContent = c.humano ? "👤 Humano" : "🤖 IA ativa"; tg.title = c.humano ? "Atendimento humano (IA não responde). Clique para devolver à IA" : "IA respondendo. Clique para assumir (humano)"; } }
   function fetchC(id) { return call({ action: "chatGet", id: id }).then(function (c) { data[id] = c; if (byId[id]) byId[id].unreadAdmin = 0; msgs(id); }).catch(function () {}); }
   function mkWin(id) { var c = byId[id], w = document.createElement("div"); w.className = "cwin"; w.id = "cw_" + id;
