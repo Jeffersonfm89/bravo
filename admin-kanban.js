@@ -25,6 +25,7 @@
     "#finModal{position:fixed;inset:0;z-index:40;background:#000c;display:flex;align-items:center;justify-content:center}#finModal[hidden]{display:none}" +
     "#finModal .box{background:#141414;border-radius:16px;padding:16px;width:min(380px,92%);display:flex;flex-direction:column;gap:10px}#finModal label{display:flex;gap:10px;align-items:center;font-size:18px;padding:10px;border:1px solid #333;border-radius:12px}#finModal input{width:22px;height:22px;accent-color:#f5b400}";
   document.head.appendChild(css);
+  var bcss = document.createElement("style"); bcss.textContent = ".kd.blink{animation:kblink 1s ease-in-out infinite}@keyframes kblink{0%,100%{border-color:#f5b400;box-shadow:0 0 0 0 #f5b400aa;background:#1a1a1a}50%{border-color:#ff5252;box-shadow:0 0 14px 4px #f5b40088;background:#3a2a00}}@media(prefers-reduced-motion:reduce){.kd.blink{animation:none;border-color:#ff5252;background:#3a2a00}}"; document.head.appendChild(bcss);
   var kb = document.createElement("div"); kb.className = "kb"; kb.id = "kanban"; q("#list").after(kb);
   var fm = document.createElement("div"); fm.id = "finModal"; fm.hidden = true;
   fm.innerHTML = '<div class="box"><h3 style="margin:0">Finalizar pedido <span id="fmId"></span></h3><p class="cust" id="fmInfo"></p><div id="fmOpts"></div><button class="big b-ok" id="fmOk" style="border:0;border-radius:12px;padding:16px;font-size:17px;font-weight:900">Confirmar entrega</button><button class="ghost" id="fmCancel">Voltar</button></div>';
@@ -37,7 +38,7 @@
   function card(o, col) {
     var c = o.cliente, ent = c.tipo !== "Retirada", hr = new Date(o.criadoEm).toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" });
     var pg = badge(o);
-    var h = '<div class="kd ' + col + (o.status === "Cancelado" ? " canc" : "") + '"><div class="top"><span>nº ' + esc(o.id.slice(-8)) + " · " + hr + '</span><span class="st">' + brlFmt(o.total) + "</span></div>" +
+    var h = '<div class="kd ' + col + (col === "novo" && o.status === "Recebido" ? " blink" : "") + (o.status === "Cancelado" ? " canc" : "") + '"><div class="top"><span>nº ' + esc(o.id.slice(-8)) + " · " + hr + '</span><span class="st">' + brlFmt(o.total) + "</span></div>" +
       "<div><b>" + esc(c.nome) + "</b> · " + (ent ? "🛵 " + esc(c.bairro || "Entrega") : "🏪 Retirada") + " · " + pg + "</div>" + items(o) + (c.obs ? "<div><b>Obs:</b> " + esc(c.obs) + "</div>" : "");
     if (col === "wait") h += '<button class="big b-go" data-lib="' + o.id + '">Liberar manualmente</button><button class="big b-no" data-k="Cancelado" data-id="' + o.id + '">Cancelar</button>';
     if (col === "novo") h += '<button class="big b-ok" data-k="Aceito" data-id="' + o.id + '">ACEITAR</button><button class="big b-no" data-k="Cancelado" data-id="' + o.id + '">Recusar / Cancelar</button>';
