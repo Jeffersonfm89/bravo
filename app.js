@@ -33,7 +33,7 @@ if(d.id){const p=PRODUCTS.find(x=>x.id==d.id);p.options?openOpts(p):addToCart(p.
 if(d.inc){cart[d.inc].qty++;save()} if(d.dec){if(--cart[d.dec].qty<=0)delete cart[d.dec];save()} if(d.rm){delete cart[d.rm];save()}
 if(d.cat){cat=d.cat;document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b==e.target));grid()}});
 $("#cartBtn").onclick=()=>openCart(true);$("#closeCart").onclick=$("#overlay").onclick=()=>openCart(false);
-document.querySelectorAll("[name=tipo]").forEach(r=>r.onchange=()=>{const ent=$("[name=tipo]:checked").value=="Entrega";$("#addr").hidden=!ent;$("#addr").querySelectorAll("[required],[data-req]").forEach(i=>{i.dataset.req=1;i.required=ent})});
+document.querySelectorAll("[name=tipo]").forEach(r=>r.onchange=()=>{const ent=$("[name=tipo]:checked").value=="Entrega";$("#addr").hidden=!ent;if(window.meApplyTipo)meApplyTipo();else $("#addr").querySelectorAll("[required],[data-req]").forEach(i=>{i.dataset.req=1;i.required=ent})});
 /* ---- Bairros e taxas (do servidor) ---- */
 let BAIRROS=[];const feeOf=n=>{const b=BAIRROS.find(x=>x.nome==n);return b?b.taxa:undefined};
 async function loadBairros(){try{if(API===null)throw 0;const d=await(await fetch(API+"/api/config")).json();BAIRROS=d.bairros||[];if(d.pastelAdds){applyAddPrices(d.pastelAdds);grid();render()}}catch(e){BAIRROS=DEFAULT_BAIRROS.map(nome=>({nome,taxa:null}))}

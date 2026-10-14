@@ -1,5 +1,5 @@
 // Service worker da Bravo (loja e painel). Só guarda arquivos estáticos; /api/* NUNCA é guardado.
-var VERSION = "bravo-20261014145740";
+var VERSION = "bravo-20261014150237";
 var PRECACHE = ["/", "/style.css", "/manifest.webmanifest", "/icons/app-192.png", "/icons/app-512.png", "/img/logo.jpg", "/img/logo-hero.png"];
 self.addEventListener("install", function (e) {
   self.skipWaiting();

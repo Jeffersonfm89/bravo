@@ -79,3 +79,5 @@ fieldset{border:1px solid #2a2a2a;border-radius:12px;padding:8px 10px}legend{col
 .itip{position:fixed;left:12px;right:12px;bottom:16px;z-index:60;background:#000;border:2px solid #f5b400;border-radius:16px;padding:14px;color:#fff;box-shadow:0 8px 30px #000a}.itip p{margin:0 0 10px;font-size:15px}
 #installBar{flex-wrap:wrap}#installBar span{min-width:150px}#installBar #installBtn{flex:1 1 100%;margin-top:4px}
 footer{padding-bottom:150px}
+
+#addrSaved{background:#151515;border-radius:10px;padding:8px 10px;margin:6px 0}#addrSaved a{color:#f5b400;margin-left:6px;white-space:nowrap}
