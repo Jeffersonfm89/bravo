@@ -5,5 +5,5 @@ for f in index.html pedido.html admin.html; do
   sed -i -E "s#(src|href)=\"([a-z0-9-]+\.(js|css))(\?v=[0-9]+)?\"#\1=\"\2?v=$V\"#g" "$f"
 done
 # registra o service worker com versão também
-sed -i -E "s#register\(\"sw\.js(\?v=[0-9]+)?\"\)#register(\"sw.js?v=$V\")#" admin-extra.js
+sed -i -E "s/var VERSION = \"bravo-[0-9]+\"/var VERSION = \"bravo-$V\"/" sw.js
 echo "versão $V"
