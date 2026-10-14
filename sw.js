@@ -1,9 +1,8 @@
-// Service worker da Bravo (loja e painel). Só guarda arquivos estáticos; /api/* NUNCA é guardado.
-var VERSION = "bravo-20261014142445";
-var PRECACHE = ["/", "/style.css", "/manifest.webmanifest", "/icons/app-192.png", "/icons/app-512.png", "/img/logo.jpg", "/img/logo-hero.png"];
+// Service worker da Bravo (loja + painel). Cacheia só arquivos estáticos; HTML é network-first; /api/* NUNCA é cacheado.
+var VERSION = "bravo-v20261014";
+var CORE = ["/", "/style.css", "/img/logo.jpg", "/img/logo-hero.png", "/icons/app-192.png", "/icons/adm-192.png"];
 self.addEventListener("install", function (e) {
-  self.skipWaiting();
-  e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(PRECACHE).catch(function () {}); }));
+  e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(CORE); }).catch(function () {}).then(function () { return self.skipWaiting(); }));
 });
 self.addEventListener("activate", function (e) {
   e.waitUntil(caches.keys().then(function (ks) {
@@ -13,27 +12,29 @@ self.addEventListener("activate", function (e) {
 self.addEventListener("fetch", function (e) {
   var req = e.request, url = new URL(req.url);
   if (req.method !== "GET" || url.origin !== self.location.origin) return;
-  if (url.pathname.indexOf("/api/") === 0 || url.pathname === "/api") return; // sempre ao vivo, sem cache
-  var isHtml = req.mode === "navigate" || (req.headers.get("accept") || "").indexOf("text/html") >= 0;
+  if (url.pathname.indexOf("/api/") === 0 || url.pathname === "/api") return; // sempre rede, sem cache
+  if (url.pathname === "/sw.js") return;
+  var isHtml = req.mode === "navigate" || /\.html$/.test(url.pathname) || url.pathname === "/";
   if (isHtml) {
-    // HTML: rede primeiro; cópia local só se estiver sem internet
     e.respondWith(fetch(req).then(function (r) {
-      if (r.ok && !r.redirected) { var cp = r.clone(); caches.open(VERSION).then(function (c) { c.put(req, cp); }); }
+      if (r.ok && r.type === "basic") { var cp = r.clone(); caches.open(VERSION).then(function (c) { c.put(req, cp); }); }
       return r;
     }).catch(function () { return caches.match(req).then(function (m) { return m || caches.match("/"); }); }));
     return;
   }
-  if (!/\.(css|js|png|jpe?g|webp|svg|ico|webmanifest|woff2?)$/.test(url.pathname) || url.pathname === "/sw.js") return;
-  // estáticos: rede primeiro também (arquivos têm ?v=), com cópia para uso offline
-  e.respondWith(fetch(req).then(function (r) {
-    if (r.ok) { var cp = r.clone(); caches.open(VERSION).then(function (c) { c.put(req, cp); }); }
-    return r;
-  }).catch(function () { return caches.match(req); }));
+  if (!/\.(js|css|png|jpg|jpeg|webp|svg|ico|webmanifest|woff2?)$/.test(url.pathname)) return;
+  // estáticos: usa cache e atualiza em segundo plano (os ?v= mudam a cada deploy)
+  e.respondWith(caches.open(VERSION).then(function (c) {
+    return c.match(req).then(function (m) {
+      var net = fetch(req).then(function (r) { if (r.ok && r.type === "basic") c.put(req, r.clone()); return r; });
+      return m ? (net.catch(function () {}), m) : net;
+    });
+  }));
 });
 self.addEventListener("notificationclick", function (e) {
   e.notification.close();
   e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (cs) {
-    for (var i = 0; i < cs.length; i++) if (/\/adm\/|admin\.html/.test(cs[i].url)) return cs[i].focus();
-    return self.clients.openWindow("/adm/");
+    for (var i = 0; i < cs.length; i++) if (cs[i].url.indexOf("admin") >= 0) return cs[i].focus();
+    return self.clients.openWindow("/admin.html");
   }));
 });

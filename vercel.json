@@ -10,7 +10,7 @@
    "headers": [
     {
      "key": "Content-Security-Policy",
-     "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://bravojoinville.com.br https://www.bravojoinville.com.br https://bravo-sage.vercel.app; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; manifest-src 'self'; worker-src 'self'"
+     "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://bravojoinville.com.br https://www.bravojoinville.com.br https://bravo-sage.vercel.app; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; manifest-src 'self'; worker-src 'self'; manifest-src 'self'; worker-src 'self'"
     },
     {
      "key": "X-Frame-Options",
@@ -99,6 +99,41 @@
      "value": "no-store"
     }
    ]
+  },
+  {
+   "source": "/(.*)\\.webmanifest",
+   "headers": [
+    {
+     "key": "Content-Type",
+     "value": "application/manifest+json"
+    },
+    {
+     "key": "Cache-Control",
+     "value": "no-cache"
+    }
+   ]
+  },
+  {
+   "source": "/sw.js",
+   "headers": [
+    {
+     "key": "Cache-Control",
+     "value": "no-cache, no-store, must-revalidate"
+    },
+    {
+     "key": "Service-Worker-Allowed",
+     "value": "/"
+    }
+   ]
+  },
+  {
+   "source": "/api/(.*)",
+   "headers": [
+    {
+     "key": "Cache-Control",
+     "value": "no-store"
+    }
+   ]
   }
  ],
  "redirects": [
@@ -110,6 +145,16 @@
   {
    "source": "/adm",
    "destination": "/adm/",
+   "permanent": false
+  },
+  {
+   "source": "/adm",
+   "destination": "/admin.html",
+   "permanent": false
+  },
+  {
+   "source": "/adm/",
+   "destination": "/admin.html",
    "permanent": false
   }
  ],
