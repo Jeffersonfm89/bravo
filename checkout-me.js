@@ -51,5 +51,10 @@
       me.enderecos = [a].concat(me.enderecos.filter(function (x) { return fullTxt(x).toLowerCase() !== k; })).slice(0, 5); }
     if (c.addressRef) { var r = me.refs.find(function (x) { return x.addressRef === c.addressRef; }); if (r) me.refs = [r].concat(me.refs.filter(function (x) { return x !== r; })); }
     persist(); sel = null; showCard(); };
+  // endereço salvo não achado no servidor: descarta o ref e reabre os campos já com o bairro (nunca o endereço completo)
+  window.meRefFail = function (c) { var ref = c && c.addressRef, b = (c && c.bairro) || (window.meRef && window.meRef.bairro) || "";
+    me.refs = me.refs.filter(function (x) { return x.addressRef !== ref; }); persist(); window.meRef = null;
+    pick("new"); if (b) setBairro(b); $("#addrFields").hidden = false; $("#bairro").hidden = false;
+    setTimeout(function () { try { F.elements.rua.focus(); F.elements.rua.scrollIntoView({ block: "center" }); } catch (_) {} }, 350); };
   showCard(); drawPick();
 })();

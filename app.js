@@ -67,7 +67,7 @@ clearInterval(poll);poll=setInterval(async()=>{try{const s=await(await fetch(api
 if(s.pago){clearInterval(poll);$("#pixStatus").textContent="✅ Pagamento confirmado!";$("#pixStatus").classList.add("ok");setTimeout(()=>showDone(s,true),1200)}
 else if(["rejected","cancelled","expired"].includes(s.pixStatus)){clearInterval(poll);$("#pixStatus").textContent="Pagamento não concluído ("+s.pixStatus+"). Faça um novo pedido."}}catch(e){}},4000)}
 else showDone(o,false)}
-catch(e){toast(e.message)}finally{btn.disabled=false;btn.textContent="Confirmar pedido"}};
+catch(e){if(/^Endere\u00e7o salvo n\u00e3o encontrado|^Endereço salvo não encontrado/.test(e.message)&&window.meRefFail){meRefFail(draft.cliente);view("vCart");toast("Confirme rua e número para continuar")}else toast(e.message)}finally{btn.disabled=false;btn.textContent="Confirmar pedido"}};
 function showDone(o,paid){const t=orderText(o,o.id?trackURL(o.id):"");view("vDone");$("#doneTitle").textContent=paid?"✅ Pagamento confirmado!":"✅ Pedido recebido!";$("#sumText").value=t;
 document.querySelectorAll(".trackLink").forEach(a=>a.hidden=!o.id);
 $("#sendWa").hidden=!WHATSAPP_NUMBER;$("#sendWa").onclick=()=>window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t)}`,"_blank")}

@@ -7,7 +7,9 @@ const makeRef = (tel, id) => id + '.' + sig(tel, id);
 function checkRef(ref, tel) { const [id, s] = String(ref || '').split('.'); if (!id || !s) return null; const e = sig(tel, id);
   return s.length === e.length && crypto.timingSafeEqual(Buffer.from(s), Buffer.from(e)) ? id : null; }
 const norm = a => [a.rua, a.numero, a.complemento, a.bairro].map(x => String(x || '').toLowerCase().replace(/\s+/g, ' ').trim()).join('|');
-function addrList(c) { if (Array.isArray(c.enderecos)) return c.enderecos; return c.endereco && c.endereco.rua ? [{ id: crypto.randomBytes(4).toString('hex'), ...c.endereco }] : []; }
+function addrList(c) { if (Array.isArray(c.enderecos)) return c.enderecos; return c.endereco && c.endereco.rua ? [{ ...c.endereco, id: legacyId(c.endereco) }] : []; }
+// id estável para cadastro antigo (só `endereco`): antes era aleatório a cada leitura e o addressRef nunca batia
+const legacyId = a => 'l' + crypto.createHash('sha256').update(norm(a)).digest('hex').slice(0, 8);
 function pushAddr(c, a) { // último usado primeiro, sem duplicar, máx. 5
   const L = addrList(c), n = norm(a), old = L.find(x => norm(x) === n);
   const e = { id: old ? old.id : crypto.randomBytes(4).toString('hex'), bairro: a.bairro, rua: a.rua, numero: a.numero, complemento: a.complemento, referencia: a.referencia };
