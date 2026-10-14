@@ -77,3 +77,5 @@ fieldset{border:1px solid #2a2a2a;border-radius:12px;padding:8px 10px}legend{col
 .ibar img{width:36px;height:36px;border-radius:8px}.ibar span{flex:1;font-size:14px;color:#ddd}.ibar span b{color:#fff}
 #installBtn{background:#f5b400;color:#000;border:0;border-radius:20px;padding:8px 14px;font-weight:800;white-space:nowrap}#installClose{background:none;border:0;color:#888;font-size:18px;padding:4px}
 .itip{position:fixed;left:12px;right:12px;bottom:16px;z-index:60;background:#000;border:2px solid #f5b400;border-radius:16px;padding:14px;color:#fff;box-shadow:0 8px 30px #000a}.itip p{margin:0 0 10px;font-size:15px}
+#installBar{flex-wrap:wrap}#installBar span{min-width:150px}#installBar #installBtn{flex:1 1 100%;margin-top:4px}
+footer{padding-bottom:150px}
