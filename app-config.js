@@ -1,6 +1,6 @@
 /* ====== CONFIGURAÇÃO DA LOJA (edite aqui) ====== */
 // Número do WhatsApp da Bravo com DDI+DDD, só dígitos, ex.: "5511999998888". Vazio = mostra resumo para copiar.
-var WHATSAPP_NUMBER = "5547996158639";
+var WHATSAPP_NUMBER = "5547996977883"; // (47) 99697-7883 — número oficial da Bravo (WhatsApp Business)
 // URL da API na Vercel (ex.: "https://bravo.vercel.app"). Vazio = usa a mesma origem se a página estiver na Vercel;
 // no GitHub Pages, vazio = Pix automático desativado (pedido segue pelo WhatsApp como antes).
 var API_BASE = "https://bravojoinville.com.br";
