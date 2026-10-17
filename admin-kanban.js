@@ -46,7 +46,7 @@
     if (col === "pronto") h += ent ? '<button class="big b-go" data-k="Saiu para entrega" data-id="' + o.id + '">SAIU PARA ENTREGA</button>' : '<button class="big b-ok" data-fin="' + o.id + '">RETIRADO / ENTREGUE</button>';
     if (col === "saiu") h += '<button class="big b-ok" data-fin="' + o.id + '">ENTREGUE</button>';
     if (col === "fim") h += "<div>" + (o.status === "Cancelado" ? "❌ Cancelado" : "💰 " + esc(o.pagamentoFinal || defPag(o))) + "</div>";
-    h += '<div class="krow"><button class="ghost" data-print="' + o.id + '">🖨️ Comanda</button><a class="wa' + (nudge[o.id] === o.status ? " nudge" : "") + '" target="_blank" href="' + waLink(o) + '" data-wa="' + o.id + '">📲 ' + (nudge[o.id] === o.status ? "Avisar: " + esc(o.status) : "WhatsApp") + '</a></div></div>';
+    h += '<div class="krow"><button class="ghost" data-print="' + o.id + '">🖨️ Imprimir</button><a class="wa' + (nudge[o.id] === o.status ? " nudge" : "") + '" target="_blank" href="' + waLink(o) + '" data-wa="' + o.id + '">📲 ' + (nudge[o.id] === o.status ? "Avisar: " + esc(o.status) : "WhatsApp") + '</a></div></div>';
     return h;
   }
   window.render = function () {
@@ -83,7 +83,7 @@
         if (acc) { var txt = "Olá, " + o.cliente.nome + "! Aqui é da Bravo 👑\nSeu pedido foi *ACEITO* ✅ Confira os dados abaixo e responda *OK* para confirmar, por favor:\n\n" + orderText(o, SITE_URL + "pedido.html?id=" + o.id);
           var url = "https://wa.me/" + phone(o.cliente.tel) + "?text=" + encodeURIComponent(txt); if (w) w.location.href = url; else window.open(url, "_blank"); }
         else nudge[o.id] = o.status;   // destaca o botão "Avisar" no cartão
-        upd(o); }).catch(function (er) { if (w) w.close(); alert(er.message); b.disabled = false; }); }
+        upd(o); if (acc && window.bravoOnAccepted) window.bravoOnAccepted(o); }).catch(function (er) { if (w) w.close(); alert(er.message); b.disabled = false; }); }
     if (f) openFin(orders.find(function (o) { return o.id === f.dataset.fin; }));
   }
   var finO = null;

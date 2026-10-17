@@ -4,7 +4,7 @@
   var q = function (s) { return document.querySelector(s); };
   function info(t) { q("#alertInfo").textContent = t; }
   // ---------- preferências
-  ["optWake", "optAutoPrint"].forEach(function (id) { q("#" + id).checked = LS.getItem("bravo_" + id) === "1"; q("#" + id).onchange = function () { LS.setItem("bravo_" + id, this.checked ? "1" : "0"); if (id === "optWake") wake(this.checked); }; });
+  ["optWake"].forEach(function (id) { q("#" + id).checked = LS.getItem("bravo_" + id) === "1"; q("#" + id).onchange = function () { LS.setItem("bravo_" + id, this.checked ? "1" : "0"); if (id === "optWake") wake(this.checked); }; });
   q("#optPaper").value = LS.getItem("bravo_paper") || "80"; q("#optPaper").onchange = function () { LS.setItem("bravo_paper", this.value); };
   // ---------- som (Web Audio: precisa de um toque do usuário para liberar no celular)
   function unlockAudio() { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch (e) {} }
@@ -58,7 +58,6 @@
     var o = fresh[0], txt = (fresh.length > 1 ? fresh.length + " NOVOS PEDIDOS!" : "NOVO PEDIDO nº " + o.id) ;
     startAlarm(txt + "\n" + o.cliente.nome + " · " + brlFmt(o.total));
     notify("🔔 " + txt, o.cliente.nome + " · " + brlFmt(o.total) + " · " + o.pagamento);
-    if (q("#optAutoPrint").checked) printOrders(fresh);
   };
   window.onStart = function () { unlockAudio(); refreshInfo(); if (q("#optWake").checked) wake(true); };
   // ---------- comanda
@@ -97,5 +96,5 @@
   window.bravoAlert = function (t, body) { startAlarm(t); notify('🔔 ' + t, body || ''); };
   document.addEventListener("pointerdown", unlockAudio, true);           // qualquer toque libera o som
   if (!q("#panel").hidden) window.onStart();
-  document.addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest("[data-print]"); if (!b) return; var o = (window.getOrders ? window.getOrders() : []).find(function (x) { return x.id === b.dataset.print; }); if (o) printOrders([o]); });
+  document.addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest("[data-print]"); if (!b) return; var o = (window.getOrders ? window.getOrders() : []).find(function (x) { return x.id === b.dataset.print; }); if (o) (window.bravoPrintManual || function (x) { printOrders([x]); })(o); });
 })();
