@@ -16,7 +16,7 @@
   document.head.appendChild(css);
   var box = document.createElement("div");
   box.innerHTML = '<div class="cw-btns"><a class="cw-wa" target="_blank" rel="noopener">💬 Chamar no WhatsApp</a><button class="cw-open">🗨️ Chat no app<span class="cw-badge" hidden>0</span></button></div>' +
-    '<div class="cw-panel" hidden><div class="cw-h"><b>Atendimento Bravo</b><button class="cw-x" aria-label="Fechar">✕</button></div>' +
+    '<div class="cw-panel" hidden><div class="cw-h"><b>Atendimento Bravo</b><span><button class="cw-r" aria-label="Atualizar" title="Ver mensagens novas" style="font-size:18px">🔄</button><button class="cw-x" aria-label="Fechar">✕</button></span></div>' +
     '<form class="cw-start"><p style="margin:0">Fale com a gente por aqui 👋</p><input name="nome" placeholder="Seu nome" maxlength="60" required><input name="tel" type="tel" placeholder="Telefone (opcional)" maxlength="30"><button>Começar conversa</button></form>' +
     '<div class="cw-msgs" hidden></div><form class="cw-f" hidden><input name="txt" placeholder="Digite sua mensagem" maxlength="500" autocomplete="off"><button>Enviar</button></form></div>';
   document.body.appendChild(box);
@@ -35,9 +35,9 @@
     lastN = m.length;
   }
   function poll() { if (!st) return; fetch(API + "/api/chat?id=" + st.id + "&token=" + st.token).then(function (r) { if (r.status === 404) { st = null; LS.removeItem(KEY); show(); return null; } return r.json(); }).then(function (c) { if (c) draw(c); }).catch(function () {}); }
-  function schedule() { clearInterval(timer); timer = setInterval(function () { if (!document.hidden) poll(); }, open ? 5000 : 60000); }
-  document.addEventListener("visibilitychange", function () { if (!document.hidden && st) poll(); });
+  function schedule() { /* sem consulta automática: carrega ao abrir e no botão 🔄 */ }
   $(".cw-open").onclick = function () { open = true; $(".cw-panel").hidden = false; $(".cw-badge").hidden = true; show(); poll(); schedule(); };
+  $(".cw-r").onclick = function () { poll(); };
   $(".cw-x").onclick = function () { open = false; $(".cw-panel").hidden = true; schedule(); };
   $(".cw-start").onsubmit = function (ev) { ev.preventDefault(); var f = ev.target, b = f.querySelector("button"); b.disabled = true;
     fetch(API + "/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "start", nome: f.nome.value, tel: f.tel.value, orderId: orderId() }) })

@@ -62,5 +62,5 @@
   }
   function load() { if (q("#tChat").hidden || document.hidden) return; call({ action: "aiUsage" }).then(draw).catch(function (e) { box.textContent = "Uso da IA: " + e.message; }); }
   q("#atabs").addEventListener("click", function (e) { if (e.target.dataset && e.target.dataset.t === "tChat") setTimeout(load, 50); });
-  setInterval(load, 5 * 60e3);
+  setInterval(function () { if (window.bravoAutoActive && window.bravoAutoActive()) load(); }, 5 * 60e3);
 })();

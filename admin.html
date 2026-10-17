@@ -19,15 +19,15 @@
 <header><img src="img/logo.jpg" alt="Bravo" class="logo"><b>Painel de pedidos</b></header>
 <div class="wrap"><form id="login" class="view"><input type="password" id="pw" placeholder="Senha do painel" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false"><label class="r"><input type="checkbox" id="showPw"> Mostrar senha</label><p id="loginErr" style="color:#f66;font-weight:700;margin:0"></p><button class="go">Entrar</button></form>
 <div id="panel" hidden><nav class="tabs" id="atabs"><button data-t="tPedidos" class="on">Pedidos</button><button data-t="tCard">Cardápio</button><button data-t="tTaxas">Taxas de entrega</button><button data-t="tMet">Métricas</button><button data-t="tCli">Clientes</button><button data-t="tChat">Conversas <span id="chatBadge" class="cbadge" hidden>0</span></button><span id="installBar" hidden><button id="installBtn" type="button">📲 Baixar app</button></span></nav>
-<section id="tPedidos"><div id="alertBar" class="abar"><button id="btnAlerts" class="go" style="padding:10px">🔔 Ativar alertas de pedido</button>
-<label><input type="checkbox" id="optWake"> Manter tela ligada</label><label>Papel (impressão pelo navegador): <select id="optPaper"><option value="80">80 mm</option><option value="58">58 mm</option><option value="a4">A4</option></select></label><button id="btnTestAlert" class="ghost" style="padding:6px 10px">Testar som</button><small id="alertInfo" class="est"></small></div><div id="filters"><label><input type="checkbox" id="hideDone" checked> Ocultar entregues/cancelados</label> <button id="reload" class="ghost" style="padding:6px 12px">Atualizar</button> <span id="upd" style="color:#777"></span></div><div id="list"></div></section>
+<section id="tPedidos"><div id="syncBar" class="abar"><button id="reload" class="go" style="padding:10px 16px;width:auto">🔄 Atualizar</button> <label title="Só entre 19h e meia-noite (horário de Brasília)"><input type="checkbox" id="optAuto"> Atualização automática (19h–0h)</label> <span id="upd" style="color:#777"></span><small id="autoNote" style="display:block;width:100%;color:#f5b400"></small></div><div id="alertBar" class="abar"><button id="btnAlerts" class="go" style="padding:10px">🔔 Ativar alertas de pedido</button>
+<label><input type="checkbox" id="optWake"> Manter tela ligada</label><label>Papel (impressão pelo navegador): <select id="optPaper"><option value="80">80 mm</option><option value="58">58 mm</option><option value="a4">A4</option></select></label><button id="btnTestAlert" class="ghost" style="padding:6px 10px">Testar som</button><small id="alertInfo" class="est"></small></div><div id="filters"><label><input type="checkbox" id="hideDone" checked> Ocultar entregues/cancelados</label></div><div id="list"></div></section>
 <section id="tCard" hidden><div id="card"></div></section><section id="tTaxas" hidden><p class="cust">Bairros sem taxa aparecem para o cliente como "taxa a combinar". Para desativar um bairro, desmarque "Atende (desmarque para desativar)" — a taxa fica salva. Bairros não podem ser excluídos.</p>
 <div class="row2"><input id="newB" placeholder="Novo bairro"><button id="addB" class="ghost" style="padding:8px 12px">Adicionar</button></div>
 <table class="bd" id="tblB"></table><label class="cust">Taxa Mercado Pago no Pix (estimativa quando o MP não informa) %: <input id="mpPct" style="width:80px"></label>
 <h4>Adicionais de pastel (preço cada)</h4><table class="bd" id="tblAdds"></table><button id="saveB" class="go">Salvar taxas e preços</button></section>
 <section id="tMet" hidden><div class="row2" style="flex-wrap:wrap"><select id="per"><option value="hoje">Hoje</option><option value="7">7 dias</option><option value="30" selected>30 dias</option><option value="mes">Este mês</option><option value="custom">Personalizado</option></select>
 <input type="date" id="dFrom" hidden><input type="date" id="dTo" hidden><button id="goMet" class="ghost" style="padding:8px 12px">Ver</button></div><div id="met"></div></section>
-<section id="tChat" hidden><label class="cust"><input type="checkbox" id="aiAuto"> Resposta automática (IA) <small class="est" id="aiInfo"></small></label>
+<section id="tChat" hidden><button id="chatReload" class="go" style="padding:8px 14px;width:auto;margin-bottom:8px">🔄 Atualizar conversas</button><label class="cust"><input type="checkbox" id="aiAuto"> Resposta automática (IA) <small class="est" id="aiInfo"></small></label>
 <div id="chatList"></div><div id="chatView" hidden><button id="chatBack" class="ghost" style="padding:6px 12px">← Conversas</button><h3 id="chatTitle"></h3><div id="chatMsgs" class="cmsgs"></div>
 <form id="chatForm" class="row2"><input name="txt" placeholder="Responder…" maxlength="1000" autocomplete="off"><button class="go" style="padding:10px 14px">Enviar</button></form></div></section>
 <section id="tCli" hidden><input id="qCli" placeholder="Buscar por nome, telefone ou bairro"><div id="cli"></div></section></div></div>
@@ -44,7 +44,14 @@ return `<div class="o"><h3><span>nº ${esc(o.id)}</span><span class="st">${esc(o
 <table class="bd">${o.itens.map(i=>`<tr><td>${i.qty}x ${esc(i.name)}${i.detalhe?` <small class="det">[${esc(i.detalhe)}]</small>`:""} <small>(${brlFmt(i.unit)})</small></td><td class="n">${brlFmt(i.subtotal)}</td></tr>`).join("")}<tr class="s"><td>Subtotal</td><td class="n">${brlFmt(o.subtotal)}</td></tr><tr class="s"><td>Taxa de entrega</td><td class="n">${feeLabel(o.taxaEntrega)}</td></tr><tr class="t"><td>Total</td><td class="n">${brlFmt(o.total)}${o.taxaEntrega==null?" + entrega":""}</td></tr></table>
 <div class="btns">${ORDER_STATUSES.filter(s=>!(c.tipo=="Retirada"&&s=="Saiu para entrega")&&!(c.tipo!="Retirada"&&s=="Pronto para retirada")).map(s=>`<button data-id="${o.id}" data-s="${s}" class="${s==o.status?"on":""}">${s}</button>`).join("")}</div>
 <button class="ghost" style="margin:8px 6px 0 0;padding:9px 12px" data-print="${o.id}">🖨️ Imprimir comanda</button><a class="wa" target="_blank" href="${waLink(o)}">${lastWa[o.id]?"📲 Avisar no WhatsApp: "+esc(o.status):"📲 Avisar cliente no WhatsApp"}</a></div>`}).join("")||"<p>Nenhum pedido.</p>"}
-/* Atualização econômica: a cada 20s lê só /api/rev (2 marcadores, cache de 10s na CDN). Pedidos/conversas só são baixados quando mudam, e só os que mudaram. */
+/* Atualização: por padrão NÃO consulta sozinho (economia do Blob). Só ao abrir o painel e no botão 🔄 Atualizar.
+   Com "Atualização automática" ligada, consulta sozinho apenas entre 19h e 0h (Brasília). */
+const AUTO_KEY="bravoAutoUpd";
+function spHour(){return Number(new Intl.DateTimeFormat("en-US",{timeZone:"America/Sao_Paulo",hour:"numeric",hourCycle:"h23"}).format(new Date()))%24}
+const inShopHours=()=>spHour()>=19;
+const autoActive=()=>$("#optAuto").checked&&inShopHours();window.bravoAutoActive=autoActive;
+function autoNote(){$("#autoNote").textContent=!$("#optAuto").checked?"Atualização automática desligada: pedidos novos, alarme e impressão automática de pedidos aceitos em outro aparelho só aparecem quando você tocar em 🔄 Atualizar.":!inShopHours()?"Fora do horário (19h–0h): sem atualização automática agora. Toque em 🔄 Atualizar para ver pedidos novos.":""}
+/* Atualização econômica (quando automática): a cada 20s lê só /api/rev (2 marcadores, cache de 10s na CDN). Pedidos/conversas só são baixados quando mudam, e só os que mudaram. */
 let since=null,revO=null,revC=null,lastFull=0,lastPix=0,busy=false,tmr=null,lastTick=0;
 function upd(ok){$("#upd").textContent=ok?"Atualizado "+new Date().toLocaleTimeString("pt-BR"):"⚠️ Sem conexão com o servidor, tentando de novo…"}
 function gotOrders(){render();if(window.onOrders)onOrders(orders);upd(true)}
@@ -53,20 +60,23 @@ const pendPix=()=>orders.filter(o=>o.pixId&&!o.pago&&o.status!="Cancelado"&&Date
 async function syncOrders(withPix){const d=await call({action:"sync",since,pix:withPix?pendPix():[]});if(withPix)lastPix=Date.now();since=d.now;
 const m=new Map(orders.map(o=>[o.id,o]));d.orders.forEach(o=>m.set(o.id,o));orders=[...m.values()].sort((a,b)=>b.criadoEm.localeCompare(a.criadoEm)).slice(0,150);gotOrders()}
 window.bravoChatOpen=()=>false; // admin-chat/bolhas trocam isto: conversa aberta na tela => atualiza mais rápido
-function nextDelay(){if(document.hidden)return window.bravoPrinterOnline?20e3:60e3;return window.bravoChatOpen()?10e3:20e3}
+function nextDelay(){if(!autoActive())return 60e3;if(document.hidden)return window.bravoPrinterOnline?20e3:60e3;return window.bravoChatOpen()?10e3:20e3}
 function schedule(ms){clearTimeout(tmr);tmr=setTimeout(tick,ms==null?nextDelay():ms)}
-async function tick(){if(busy)return;busy=true;lastTick=Date.now();try{
+async function tick(){autoNote();if(!autoActive()||busy){schedule();return}busy=true;lastTick=Date.now();try{
  if(Date.now()-lastFull>60*60e3){await load();revO=null}
  const r=await(await fetch(API+"/api/rev")).json();if(!r||!r.o)throw new Error("rev");
  const pixDue=pendPix().length&&Date.now()-lastPix>60e3;   // Pix pendente: confere no Mercado Pago no máx. 1x/min (o webhook normalmente já avisa)
  if(revO===null||r.o!==revO||pixDue){await syncOrders(pixDue)}revO=r.o;upd(true);
  if(revC===null||r.c!==revC){if(window.loadChats)await loadChats();revC=r.c}
 }catch(e){upd(false)}finally{busy=false;schedule()}}
-document.addEventListener("visibilitychange",()=>{if(!$("#panel").hidden&&!document.hidden&&Date.now()-lastTick>5e3)schedule(0)});
-window.bravoRefreshNow=()=>schedule(0);
+document.addEventListener("visibilitychange",()=>{if(!$("#panel").hidden&&!document.hidden&&autoActive()&&Date.now()-lastTick>5e3)schedule(0)});
+async function refreshAll(){if(busy)return;busy=true;$("#reload").disabled=true;try{await load();if(pendPix().length){try{await syncOrders(true)}catch(_){}}revO=null;if(window.loadChats){await loadChats(true);revC=null}}finally{busy=false;$("#reload").disabled=false}}
+window.bravoRefreshNow=refreshAll;
+$("#optAuto").checked=localStorage.getItem(AUTO_KEY)==="1";
+$("#optAuto").onchange=()=>{localStorage.setItem(AUTO_KEY,$("#optAuto").checked?"1":"0");autoNote();if(!$("#panel").hidden)schedule(autoActive()?0:null)};autoNote();
 $("#showPw").onchange=e=>$("#pw").type=e.target.checked?"text":"password";
 $("#login").onsubmit=async e=>{e.preventDefault();pw=$("#pw").value.trim();$("#loginErr").textContent="Entrando…";try{await call({action:"list"});sessionStorage.setItem("bravoAdm",pw);$("#loginErr").textContent="";start()}catch(e){$("#loginErr").textContent=e.message=="Senha incorreta"?"Senha incorreta":(e.message.startsWith("Erro")?e.message:"Erro ao carregar: "+e.message)}};
-function start(){$("#login").hidden=true;$("#panel").hidden=false;if(window.onStart)onStart();if(window.chatStart)chatStart();load().then(()=>schedule(500),()=>{})}
+function start(){$("#login").hidden=true;$("#panel").hidden=false;if(window.onStart)onStart();if(window.chatStart)chatStart();refreshAll().then(()=>schedule(),()=>{})}
 $("#list").onclick=async e=>{const b=e.target.closest("button[data-s]");if(!b)return;try{const o=await call({action:"setStatus",id:b.dataset.id,status:b.dataset.s});orders=orders.map(x=>x.id==o.id?o:x);lastWa[o.id]=1;render()}catch(e){alert(e.message)}};
 
 /* ---- abas ---- */
@@ -110,6 +120,6 @@ $("#cli").innerHTML=`<p class="cust">${L.length} cliente(s)</p>`+L.map(c=>{const
 ${e?`📍 ${esc(e.rua||"")}, ${esc(e.numero||"")}${e.complemento?" - "+esc(e.complemento):""} - ${esc(e.bairro||"")}${e.referencia?" (Ref.: "+esc(e.referencia)+")":""}`:"Retirada no local"}</div>
 <a class="wa" target="_blank" href="https://wa.me/${phone(c.tel)}?text=${encodeURIComponent("Olá, "+(c.nome||"")+"! Aqui é da Bravo 👑")}">📲 WhatsApp</a></div>`}).join("")}
 $("#qCli").oninput=drawCli;
-$("#hideDone").onchange=render;$("#reload").onclick=load;if(pw)start();
+$("#hideDone").onchange=render;$("#reload").onclick=refreshAll;$("#chatReload").onclick=()=>{if(window.loadChats)loadChats(true)};if(pw)start();
 </script><div id="newBanner" hidden><div><b id="nbText">NOVO PEDIDO!</b><button id="nbAck">OK, vi o pedido</button></div></div>
 <div id="printArea"></div><style id="pageStyle"></style><script src="install-app.js?v=20261014150237" defer></script><script src="admin-extra.js?v=20261014150237"></script><script src="admin-bubbles.js?v=20261014150237"></script><script src="admin-chat.js?v=20261014150237"></script><script src="admin-clientes.js?v=20261014150237"></script><script src="admin-cardapio.js?v=20261014150237"></script><script src="admin-kanban.js?v=20261014150237"></script><script src="admin-print.js?v=1"></script></body></html>

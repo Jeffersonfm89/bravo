@@ -63,7 +63,7 @@ const o=await r.json();if(!r.ok)throw new Error(o.error||"Falha ao enviar pedido
 cart={};save();localStorage.setItem("bravoLastOrder",o.id);try{window.meSave&&meSave(draft.cliente)}catch(_){}document.querySelectorAll(".oid").forEach(x=>x.textContent=o.id);document.querySelectorAll(".trackLink").forEach(a=>a.href=trackURL(o.id));
 if(o.pixErro)toast("Pix automático indisponível: combine o Pix pelo WhatsApp");
 if(o.pagamento=="Pix"&&o.pix){view("vPix");$("#pixAmount").textContent=brlFmt(o.total);$("#pixQr").src="data:image/png;base64,"+o.pix.qr_code_base64;$("#pixCode").value=o.pix.qr_code;$("#pixStatus").textContent="Aguardando pagamento…";$("#pixStatus").classList.remove("ok");
-clearInterval(poll);poll=setInterval(async()=>{try{const s=await(await fetch(api+"/api/pedido?id="+o.id)).json();
+clearInterval(poll);const pixT0=Date.now();poll=setInterval(async()=>{if($("#vPix").hidden||Date.now()-pixT0>30*60e3){clearInterval(poll);return}if(document.hidden||!$("#drawer").classList.contains("open"))return;try{const s=await(await fetch(api+"/api/pedido?id="+o.id)).json();
 if(s.pago){clearInterval(poll);$("#pixStatus").textContent="✅ Pagamento confirmado!";$("#pixStatus").classList.add("ok");setTimeout(()=>showDone(s,true),1200)}
 else if(["rejected","cancelled","expired"].includes(s.pixStatus)){clearInterval(poll);$("#pixStatus").textContent="Pagamento não concluído ("+s.pixStatus+"). Faça um novo pedido."}}catch(e){}},5000)}
 else showDone(o,false)}
