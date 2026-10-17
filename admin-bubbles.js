@@ -23,7 +23,7 @@
   function draw() {
     bw.innerHTML = Object.keys(st).filter(function (id) { return byId[id]; }).map(function (id) { var c = byId[id], un = st[id] === "open" ? 0 : c.unreadAdmin;
       return '<div class="cbub' + (un ? " pulse" : "") + '" data-b="' + id + '" title="' + esc(c.nome) + '">' + esc(ini(c.nome)) + (un ? '<span class="bn">' + un + "</span>" : "") + '<span class="bl">' + (c.precisaHumano ? "🙋 " : "") + esc(c.nome) + (c.precisaHumano ? " quer atendente" : "") + "</span></div>"; }).join("");
-    Object.keys(st).forEach(function (id) { var w = document.getElementById("cw_" + id); if (st[id] === "open" && byId[id] && !w) mkWin(id); if (st[id] !== "open" && w) { w.remove(); clearInterval(timers[id]); } });
+    Object.keys(st).forEach(function (id) { var w = document.getElementById("cw_" + id); if (st[id] === "open" && byId[id] && !w) mkWin(id); if (st[id] !== "open" && w) w.remove(); });
   }
   function msgs(id) { var c = data[id], el = document.querySelector("#cw_" + id + " .wm"); if (!c || !el) return; var bottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 30;
     el.innerHTML = c.msgs.map(function (m) { return '<div class="cm ' + m.de + '">' + esc(m.txt) + "<small>" + (m.de === "loja" ? "Você · " : m.de === "bot" ? (m.auto ? "⚙️ Mensagem automática · " : "🤖 Assistente Bravo (IA) · ") : "") + t(m.em) + "</small></div>"; }).join("") || "<p class='cust'>Sem mensagens.</p>"; if (bottom) el.scrollTop = 1e6;
@@ -32,7 +32,7 @@
   function mkWin(id) { var c = byId[id], w = document.createElement("div"); w.className = "cwin"; w.id = "cw_" + id;
     w.innerHTML = "<header><span>" + esc(c.nome) + (c.orderId ? " · nº " + esc(c.orderId) : "") + "</span>" + (c.tel ? '<a target="_blank" style="color:#111" href="https://wa.me/' + phone(c.tel) + '">📲</a>' : "") +
       '<button data-ai="' + id + '">…</button><button data-min="' + id + '" title="Minimizar">—</button><button data-close="' + id + '" title="Fechar">✕</button></header><div class="wm">Carregando…</div><form data-f="' + id + '"><input name="txt" maxlength="1000" placeholder="Responder…" autocomplete="off"><button>Enviar</button></form>';
-    ww.appendChild(w); fetchC(id).then(function () { w.querySelector(".wm").scrollTop = 1e6; }); clearInterval(timers[id]); timers[id] = setInterval(function () { fetchC(id); }, 4000); }
+    ww.appendChild(w); fetchC(id).then(function () { w.querySelector(".wm").scrollTop = 1e6; }); }
   function open(id) { if (mob()) Object.keys(st).forEach(function (k) { if (k !== id && st[k] === "open") st[k] = "bubble"; }); st[id] = "open"; save(); draw(); }
   bw.addEventListener("click", function (e) { var b = e.target.closest("[data-b]"); if (!b) return; var id = b.dataset.b; if (st[id] === "open") { st[id] = "bubble"; save(); draw(); } else open(id); });
   ww.addEventListener("click", function (e) { var m = e.target.closest("[data-min]"), x = e.target.closest("[data-close]");
@@ -41,7 +41,10 @@
     if (x) { var id = x.dataset.close; delete st[id]; save(); draw(); if (byId[id]) byId[id].fechado = true; call({ action: "chatClose", id: id }).then(function () { if (window.loadChats) loadChats(); }).catch(function (er) { alert(er.message); }); } });
   ww.addEventListener("submit", function (e) { e.preventDefault(); var id = e.target.dataset.f, i = e.target.txt, txt = i.value.trim(); if (!txt) return; i.value = "";
     call({ action: "chatReply", id: id, txt: txt }).then(function (c) { data[id] = c; msgs(id); document.querySelector("#cw_" + id + " .wm").scrollTop = 1e6; }).catch(function (er) { alert(er.message); i.value = txt; }); });
-  window.onChats = function (chats) { byId = {}; chats.forEach(function (c) { byId[c.id] = c; if (!c.fechado && c.unreadAdmin > 0 && !st[c.id]) st[c.id] = "bubble"; });
+  // janelas abertas: recarrega a conversa só quando ela mudou (sem consulta a cada 4s; o painel atualiza a cada 10s com conversa aberta)
+  var prevOpen = window.bravoChatOpen; window.bravoChatOpen = function () { return Object.keys(st).some(function (k) { return st[k] === "open"; }) || (prevOpen ? prevOpen() : false); };
+  window.onChats = function (chats) { chats.forEach(function (c) { if (st[c.id] === "open" && data[c.id] && data[c.id].atualizadoEm !== c.atualizadoEm && document.getElementById("cw_" + c.id)) fetchC(c.id); });
+    byId = {}; chats.forEach(function (c) { byId[c.id] = c; if (!c.fechado && c.unreadAdmin > 0 && !st[c.id]) st[c.id] = "bubble"; });
     Object.keys(st).forEach(function (id) { if (!byId[id] || (byId[id].fechado && st[id] !== "open")) delete st[id]; }); save(); draw(); };
   window.openChatBubble = open;
   // sininho discreto no canto superior direito

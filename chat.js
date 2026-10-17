@@ -35,7 +35,8 @@
     lastN = m.length;
   }
   function poll() { if (!st) return; fetch(API + "/api/chat?id=" + st.id + "&token=" + st.token).then(function (r) { if (r.status === 404) { st = null; LS.removeItem(KEY); show(); return null; } return r.json(); }).then(function (c) { if (c) draw(c); }).catch(function () {}); }
-  function schedule() { clearInterval(timer); timer = setInterval(poll, open ? 4000 : 20000); }
+  function schedule() { clearInterval(timer); timer = setInterval(function () { if (!document.hidden) poll(); }, open ? 5000 : 60000); }
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && st) poll(); });
   $(".cw-open").onclick = function () { open = true; $(".cw-panel").hidden = false; $(".cw-badge").hidden = true; show(); poll(); schedule(); };
   $(".cw-x").onclick = function () { open = false; $(".cw-panel").hidden = true; schedule(); };
   $(".cw-start").onsubmit = function (ev) { ev.preventDefault(); var f = ev.target, b = f.querySelector("button"); b.disabled = true;

@@ -1,7 +1,7 @@
 // Painel do dono: POST com header X-Admin-Password. Ações: list | setStatus {id,status}
 const crypto = require('crypto');
-const { cors, body, fail, bad } = require('./_lib/common');
-const { setOptOut, getList, saveList, allLists, delList, getChat, saveChat, listChats, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings } = require('./_lib/store');
+const { cors, body, fail, bad, mp } = require('./_lib/common');
+const { setOptOut, getList, saveList, allLists, delList, getChat, saveChat, listChats, delChat, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings } = require('./_lib/store');
 const { ORDER_STATUSES, PASTEL_ADDS } = require('../products.js');
 const { refreshPix } = require('./pedido.js');
 const sec = require('./_lib/security');
@@ -12,24 +12,41 @@ function authed(req) {
   const a = crypto.createHash('sha256').update(want).digest(), b = crypto.createHash('sha256').update(got).digest();
   return crypto.timingSafeEqual(a, b);
 }
+// IPs que entraram com a senha certa há pouco: não relê o controle de tentativas no Blob a cada chamada (economiza leituras)
+const okIps = new Map(), OK_TTL = 10 * 60e3;
+const SLACK_MS = 30e3; // margem do cursor incremental (relógios do Blob x função)
 module.exports = async (req, res) => {
   if (cors(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' });
   const ip = sec.ipOf(req);
+  if (authed(req) && Date.now() - (okIps.get(ip) || 0) < OK_TTL) return handle(req, res);
   const until = await sec.loginBlocked(ip).catch(() => 0);
   if (until) { const min = Math.ceil((until - Date.now()) / 60e3); res.setHeader('Retry-After', String(min * 60)); return res.status(429).json({ error: `Muitas tentativas de senha. Tente de novo em ${min} min.` }); }
   if (!authed(req)) { await new Promise(r => setTimeout(r, 800)); const blk = await sec.loginFail(ip).catch(() => 0);
     if (blk) return res.status(429).json({ error: 'Muitas tentativas de senha. Acesso bloqueado por 15 min.' });
     return res.status(401).json({ error: 'Senha incorreta' }); }
   await sec.loginOk(ip).catch(() => {});
+  if (okIps.size > 500) okIps.clear(); okIps.set(ip, Date.now());
+  return handle(req, res);
+};
+async function handle(req, res) {
   try {
     const b = body(req); res.setHeader('Cache-Control', 'no-store');
     if (b.action === 'securityLog') return res.json({ log: await sec.readLog(Number(b.days) || 7) });
     if (b.action === 'list') {
-      const os = await listOrders({ limit: 150 });
+      const t0 = Date.now(); const os = await listOrders({ limit: 150 });
       // atualiza no Mercado Pago os Pix pendentes recentes (até 2h), caso o webhook não tenha chegado
       await Promise.all(os.filter(o => o.pixId && !o.pago && o.status !== 'Cancelado' && Date.now() - new Date(o.criadoEm) < 2 * 3600e3).map(o => refreshPix(o).catch(() => {})));
-      return res.json({ orders: os.map(({ pixQr, ...o }) => o), statuses: ORDER_STATUSES });
+      return res.json({ orders: os.map(({ pixQr, ...o }) => o), statuses: ORDER_STATUSES, now: new Date(t0 - SLACK_MS).toISOString() });
+    }
+    if (b.action === 'sync') { // só os pedidos que mudaram desde "since" (+ confere no Mercado Pago os Pix pendentes que o painel mandou)
+      const t0 = Date.now(), pix = Array.isArray(b.pix) ? b.pix.slice(0, 10) : [];
+      await Promise.all(pix.map(async x => { if (!/^\d{1,20}$/.test(String(x.pixId || ''))) return;
+        const p = await mp('/v1/payments/' + x.pixId).catch(() => null); if (!p || p.status === x.st) return;
+        const o = await getOrder(String(x.id || '')); if (o && o.pixId === String(x.pixId)) await refreshPix(o).catch(() => {}); }));
+      const since = b.since && !isNaN(new Date(b.since)) ? b.since : null;
+      const os = await listOrders({ limit: 150, from: since });
+      return res.json({ orders: os.map(({ pixQr, ...o }) => o), full: !since, now: new Date(t0 - SLACK_MS).toISOString() });
     }
     if (b.action === 'liberar') {
       const o = await getOrder(String(b.id || '')); if (!o) return res.status(404).json({ error: 'Pedido não encontrado' });
@@ -41,13 +58,14 @@ module.exports = async (req, res) => {
       const os = await listOrders({ limit: 5000, from });
       return res.json({ orders: os.filter(o => !from || o.criadoEm >= from).map(({ pixQr, historico, ...o }) => o), settings: { mpPct: (await getSettings()).mpPct } });
     }
-    if (b.action === 'chats') return res.json({ chats: (await listChats()).map(c => ({ id: c.id, nome: c.nome, tel: c.tel, orderId: c.orderId, unreadAdmin: c.unreadAdmin || 0, n: c.msgs.length, last: c.msgs.slice(-1)[0] || null, atualizadoEm: c.atualizadoEm, humano: c.humano, precisaHumano: !!c.precisaHumano, fechado: !!c.fechado, fechadoEm: c.fechadoEm || null })) });
+    if (b.action === 'chats') { const t0 = Date.now(), since = b.since && !isNaN(new Date(b.since)) ? b.since : null;
+      return res.json({ full: !since, now: new Date(t0 - SLACK_MS).toISOString(), chats: (await listChats({ from: since })).map(c => ({ id: c.id, nome: c.nome, tel: c.tel, orderId: c.orderId, unreadAdmin: c.unreadAdmin || 0, n: c.msgs.length, last: c.msgs.slice(-1)[0] || null, atualizadoEm: c.atualizadoEm, humano: c.humano, precisaHumano: !!c.precisaHumano, fechado: !!c.fechado, fechadoEm: c.fechadoEm || null })) }); }
     if (b.action === 'chatGet' || b.action === 'chatReply') {
       const c = await getChat(String(b.id || '')); if (!c) return res.status(404).json({ error: 'Conversa não encontrada' });
       if (b.action === 'chatReply') { const txt = String(b.txt || '').trim().slice(0, 1000); if (!txt) throw bad('Mensagem vazia');
         c.msgs.push({ de: 'loja', txt, em: new Date().toISOString() }); c.unreadCliente = (c.unreadCliente || 0) + 1; c.humano = true; c.precisaHumano = false; }
       if (b.peek && b.action === 'chatGet') { const { token, ...out } = c; return res.json(out); } // só leitura (histórico do cliente)
-      c.unreadAdmin = 0; await saveChat(c); const { token, ...out } = c; return res.json(out);
+      if (b.action === 'chatReply' || c.unreadAdmin) { c.unreadAdmin = 0; await saveChat(c); } const { token, ...out } = c; return res.json(out);
     }
     if (b.action === 'chatHumano') { const c = await getChat(String(b.id || '')); if (!c) return res.status(404).json({ error: 'Conversa não encontrada' });
       c.humano = !!b.humano; if (!c.humano) c.precisaHumano = false; await saveChat(c); const { token, ...out } = c; return res.json(out); }
@@ -59,7 +77,7 @@ module.exports = async (req, res) => {
       await saveSettings(s); return res.json(await require('./_lib/aiusage').summary(s)); }
     if (b.action === 'chatClose') { const c = await getChat(String(b.id || '')); if (!c) return res.status(404).json({ error: 'Conversa não encontrada' });
       c.fechado = true; c.fechadoEm = new Date().toISOString(); c.unreadAdmin = 0; await saveChat(c); return res.json({ ok: true }); }
-    if (b.action === 'chatDelete') { const c = await getChat(String(b.id || '')); if (!c) return res.status(404).json({ error: 'Conversa não encontrada' }); await require('@vercel/blob').del(`chats/${c.id}.json`); return res.json({ ok: true }); }
+    if (b.action === 'chatDelete') { const c = await getChat(String(b.id || '')); if (!c) return res.status(404).json({ error: 'Conversa não encontrada' }); await delChat(c.id); return res.json({ ok: true }); }
     if (b.action === 'setAi') { const s = await getSettings(); s.aiAuto = !!b.aiAuto; await saveSettings(s); return res.json({ aiAuto: s.aiAuto !== false, aiKey: !!process.env.AI_API_KEY }); }
     if (b.action === 'optOut') { const c = await setOptOut(b.tel, b.optOut); if (!c) return res.status(404).json({ error: 'Cliente não encontrado' }); return res.json(c); }
     if (b.action === 'lists') return res.json({ lists: await allLists() });
@@ -149,4 +167,4 @@ module.exports = async (req, res) => {
       const menu = await store.getMenu(), used = JSON.stringify(menu).includes(k[1]); if (used) throw bad('Foto em uso'); await store.delBlob(k[1]); return res.json({ ok: true }); }
     throw bad('Ação inválida');
   } catch (e) { fail(res, e); }
-};
+}

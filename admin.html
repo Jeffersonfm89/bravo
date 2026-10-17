@@ -44,10 +44,29 @@ return `<div class="o"><h3><span>nº ${esc(o.id)}</span><span class="st">${esc(o
 <table class="bd">${o.itens.map(i=>`<tr><td>${i.qty}x ${esc(i.name)}${i.detalhe?` <small class="det">[${esc(i.detalhe)}]</small>`:""} <small>(${brlFmt(i.unit)})</small></td><td class="n">${brlFmt(i.subtotal)}</td></tr>`).join("")}<tr class="s"><td>Subtotal</td><td class="n">${brlFmt(o.subtotal)}</td></tr><tr class="s"><td>Taxa de entrega</td><td class="n">${feeLabel(o.taxaEntrega)}</td></tr><tr class="t"><td>Total</td><td class="n">${brlFmt(o.total)}${o.taxaEntrega==null?" + entrega":""}</td></tr></table>
 <div class="btns">${ORDER_STATUSES.filter(s=>!(c.tipo=="Retirada"&&s=="Saiu para entrega")&&!(c.tipo!="Retirada"&&s=="Pronto para retirada")).map(s=>`<button data-id="${o.id}" data-s="${s}" class="${s==o.status?"on":""}">${s}</button>`).join("")}</div>
 <button class="ghost" style="margin:8px 6px 0 0;padding:9px 12px" data-print="${o.id}">🖨️ Imprimir comanda</button><a class="wa" target="_blank" href="${waLink(o)}">${lastWa[o.id]?"📲 Avisar no WhatsApp: "+esc(o.status):"📲 Avisar cliente no WhatsApp"}</a></div>`}).join("")||"<p>Nenhum pedido.</p>"}
-async function load(){try{const d=await call({action:"list"});orders=d.orders;render();if(window.onOrders)onOrders(orders);$("#upd").textContent="Atualizado "+new Date().toLocaleTimeString("pt-BR")}catch(e){alert(e.message)}}
+/* Atualização econômica: a cada 20s lê só /api/rev (2 marcadores, cache de 10s na CDN). Pedidos/conversas só são baixados quando mudam, e só os que mudaram. */
+let since=null,revO=null,revC=null,lastFull=0,lastPix=0,busy=false,tmr=null,lastTick=0;
+function upd(ok){$("#upd").textContent=ok?"Atualizado "+new Date().toLocaleTimeString("pt-BR"):"⚠️ Sem conexão com o servidor, tentando de novo…"}
+function gotOrders(){render();if(window.onOrders)onOrders(orders);upd(true)}
+async function load(){try{const d=await call({action:"list"});orders=d.orders;since=d.now;lastFull=Date.now();lastPix=Date.now();gotOrders()}catch(e){upd(false);if(e.message=="Senha incorreta")throw e}}
+const pendPix=()=>orders.filter(o=>o.pixId&&!o.pago&&o.status!="Cancelado"&&Date.now()-new Date(o.criadoEm)<2*3600e3).map(o=>({id:o.id,pixId:o.pixId,st:o.pixStatus}));
+async function syncOrders(withPix){const d=await call({action:"sync",since,pix:withPix?pendPix():[]});if(withPix)lastPix=Date.now();since=d.now;
+const m=new Map(orders.map(o=>[o.id,o]));d.orders.forEach(o=>m.set(o.id,o));orders=[...m.values()].sort((a,b)=>b.criadoEm.localeCompare(a.criadoEm)).slice(0,150);gotOrders()}
+window.bravoChatOpen=()=>false; // admin-chat/bolhas trocam isto: conversa aberta na tela => atualiza mais rápido
+function nextDelay(){if(document.hidden)return window.bravoPrinterOnline?20e3:60e3;return window.bravoChatOpen()?10e3:20e3}
+function schedule(ms){clearTimeout(tmr);tmr=setTimeout(tick,ms==null?nextDelay():ms)}
+async function tick(){if(busy)return;busy=true;lastTick=Date.now();try{
+ if(Date.now()-lastFull>60*60e3){await load();revO=null}
+ const r=await(await fetch(API+"/api/rev")).json();if(!r||!r.o)throw new Error("rev");
+ const pixDue=pendPix().length&&Date.now()-lastPix>60e3;   // Pix pendente: confere no Mercado Pago no máx. 1x/min (o webhook normalmente já avisa)
+ if(revO===null||r.o!==revO||pixDue){await syncOrders(pixDue)}revO=r.o;upd(true);
+ if(revC===null||r.c!==revC){if(window.loadChats)await loadChats();revC=r.c}
+}catch(e){upd(false)}finally{busy=false;schedule()}}
+document.addEventListener("visibilitychange",()=>{if(!$("#panel").hidden&&!document.hidden&&Date.now()-lastTick>5e3)schedule(0)});
+window.bravoRefreshNow=()=>schedule(0);
 $("#showPw").onchange=e=>$("#pw").type=e.target.checked?"text":"password";
 $("#login").onsubmit=async e=>{e.preventDefault();pw=$("#pw").value.trim();$("#loginErr").textContent="Entrando…";try{await call({action:"list"});sessionStorage.setItem("bravoAdm",pw);$("#loginErr").textContent="";start()}catch(e){$("#loginErr").textContent=e.message=="Senha incorreta"?"Senha incorreta":(e.message.startsWith("Erro")?e.message:"Erro ao carregar: "+e.message)}};
-function start(){$("#login").hidden=true;$("#panel").hidden=false;load();setInterval(load,10000);if(window.onStart)onStart();if(window.chatStart)chatStart()}
+function start(){$("#login").hidden=true;$("#panel").hidden=false;if(window.onStart)onStart();if(window.chatStart)chatStart();load().then(()=>schedule(500),()=>{})}
 $("#list").onclick=async e=>{const b=e.target.closest("button[data-s]");if(!b)return;try{const o=await call({action:"setStatus",id:b.dataset.id,status:b.dataset.s});orders=orders.map(x=>x.id==o.id?o:x);lastWa[o.id]=1;render()}catch(e){alert(e.message)}};
 
 /* ---- abas ---- */

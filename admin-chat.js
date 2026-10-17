@@ -11,9 +11,13 @@
         (c.last ? (c.last.de === "cliente" ? "" : "Você: ") + esc(c.last.txt.slice(0, 80)) : "<i>sem mensagens</i>") + "</div></div>";
     }).join("") : "<p>Nenhuma conversa ainda.</p>";
   }
-  window.loadChats = function (showList) {
-    return call({ action: "chats" }).then(function (d) {
-      chats = d.chats; var un = chats.reduce(function (s, c) { return s + c.unreadAdmin; }, 0);
+  var chatSince = null, chatFullAt = 0;
+  window.loadChats = function (full) { // incremental: só as conversas que mudaram desde a última vez (lista completa a cada 1h ou ao abrir a aba)
+    if (full === true || !chatSince || Date.now() - chatFullAt > 60 * 60e3) { full = true; }
+    return call(full ? { action: "chats" } : { action: "chats", since: chatSince }).then(function (d) {
+      chatSince = d.now; if (full) { chatFullAt = Date.now(); chats = d.chats; } else { var m = {}; chats.forEach(function (c) { m[c.id] = c; }); d.chats.forEach(function (c) { m[c.id] = c; });
+        chats = Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return String(b.atualizadoEm).localeCompare(String(a.atualizadoEm)); }); }
+      var un = chats.reduce(function (s, c) { return s + c.unreadAdmin; }, 0);
       if (lastUnread !== null && un > lastUnread && window.chatDing) chatDing(); // chat: só um "ding" suave (sem alerta de pedido)
       lastUnread = un; window.CHATS = chats; drawList(); if (window.onChats) onChats(chats); if (cur && !q("#tChat").hidden) openChat(cur, true);
     }).catch(function () {});
@@ -34,7 +38,8 @@
     call({ action: "chatReply", id: cur, txt: txt }).then(function (c) { drawChat(c); q("#chatMsgs").scrollTop = 1e6; }).catch(function (er) { alert(er.message); i.value = txt; }); };
   q("#aiAuto").onchange = function () { var on = this.checked; call({ action: "setAi", aiAuto: on }).then(aiInfo).catch(function (e) { alert(e.message); }); };
   function aiInfo(s) { q("#aiAuto").checked = s.aiAuto !== false; q("#aiInfo").textContent = s.aiKey ? (s.aiAuto ? "(ligada)" : "(desligada)") : "(sem chave AI_API_KEY configurada — não responde mesmo ligada)"; }
-  window.chatStart = function () { if (started) return; started = true; loadChats(); setInterval(loadChats, 10000); call({ action: "getSettings" }).then(aiInfo).catch(function () {}); };
+  var prevOpen = window.bravoChatOpen; window.bravoChatOpen = function () { return (cur && !q("#tChat").hidden) || (prevOpen ? prevOpen() : false); };
+  window.chatStart = function () { if (started) return; started = true; call({ action: "getSettings" }).then(aiInfo).catch(function () {}); };
   if (!q("#panel").hidden) window.chatStart();
 })();
 /* Uso da IA: custo estimado e orçamento mensal */
@@ -55,7 +60,7 @@
       "<br><small>Limite diário sugerido: " + usd(u.dailySoftLimitUsd) + " · Preços (US$/1M tokens): entrada " + u.prices.in + ", cache " + u.prices.cached + ", saída " + u.prices.out + " · estimativa</small></div>";
     q("#aiBudSave").onclick = function () { call({ action: "aiBudget", budgetUsd: q("#aiBud").value, fxBrl: q("#aiFx").value }).then(draw).catch(function (e) { alert(e.message); }); };
   }
-  function load() { if (q("#tChat").hidden) return; call({ action: "aiUsage" }).then(draw).catch(function (e) { box.textContent = "Uso da IA: " + e.message; }); }
+  function load() { if (q("#tChat").hidden || document.hidden) return; call({ action: "aiUsage" }).then(draw).catch(function (e) { box.textContent = "Uso da IA: " + e.message; }); }
   q("#atabs").addEventListener("click", function (e) { if (e.target.dataset && e.target.dataset.t === "tChat") setTimeout(load, 50); });
-  setInterval(load, 60000);
+  setInterval(load, 5 * 60e3);
 })();

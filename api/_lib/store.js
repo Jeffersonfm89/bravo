@@ -1,5 +1,5 @@
 // Dados no Vercel Blob (store privado "bravo-pedidos"): orders/<id>.json, customers/<tel>.json, config/settings.json
-const { put, get, list } = require('@vercel/blob');
+const { put, get, list, del } = require('@vercel/blob');
 async function putJSON(key, obj) { await put(key, JSON.stringify(obj), { access: 'private', contentType: 'application/json', addRandomSuffix: false, allowOverwrite: true, cacheControlMaxAge: 60 }); return obj; }
 async function getJSON(key) {
   const r = await get(key, { access: 'private', useCache: false }).catch(e => { if (e.name === 'BlobNotFoundError') return null; throw e; });
@@ -9,7 +9,11 @@ async function listKeys(prefix) { let blobs = [], cursor; do { const r = await l
 async function mapLimit(arr, n, fn) { const out = []; for (let i = 0; i < arr.length; i += n) out.push(...await Promise.all(arr.slice(i, i + n).map(fn))); return out; }
 // ---- pedidos
 const OKEY = id => `orders/${id}.json`;
-async function saveOrder(o) { o.atualizadoEm = new Date().toISOString(); return putJSON(OKEY(o.id), o); }
+async function saveOrder(o) { o.atualizadoEm = new Date().toISOString(); await putJSON(OKEY(o.id), o); await bump('o'); return o; }
+// ---- marcadores de mudança (o painel consulta só estes 2 arquivinhos e baixa pedidos/conversas apenas quando mudam)
+const RKEY = k => `state/rev-${k}.json`;
+async function bump(k) { await putJSON(RKEY(k), { r: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }).catch(e => console.error('bump', e.message)); }
+async function getRevs() { const [o, c] = await Promise.all([getJSON(RKEY('o')), getJSON(RKEY('c'))]); return { o: (o && o.r) || '0', c: (c && c.r) || '0' }; }
 async function getOrder(id) { if (!/^[A-Z0-9-]{6,40}$/.test(String(id))) return null; return getJSON(OKEY(id)); }
 async function listOrders({ limit = 150, from } = {}) {
   let blobs = await listKeys('orders/');
@@ -44,15 +48,16 @@ const saveSettings = s => putJSON('config/settings.json', s);
 // ---- conversas (chat)
 const CKEY = id => `chats/${id}.json`;
 const getChat = id => /^[a-f0-9]{16}$/.test(String(id)) ? getJSON(CKEY(id)) : null;
-const saveChat = c => { c.atualizadoEm = new Date().toISOString(); return putJSON(CKEY(c.id), c); };
-async function listChats() { return (await mapLimit(await listKeys('chats/'), 25, b => getJSON(b.pathname))).filter(Boolean).sort((a, b) => b.atualizadoEm.localeCompare(a.atualizadoEm)); }
+const saveChat = async c => { c.atualizadoEm = new Date().toISOString(); await putJSON(CKEY(c.id), c); await bump('c'); return c; };
+async function listChats({ from } = {}) { let blobs = await listKeys('chats/'); if (from) blobs = blobs.filter(b => new Date(b.uploadedAt) >= new Date(from));
+  return (await mapLimit(blobs, 25, b => getJSON(b.pathname))).filter(Boolean).sort((a, b) => b.atualizadoEm.localeCompare(a.atualizadoEm)); }
+const delChat = async id => { await del(CKEY(id)); await bump('c'); };
 async function setOptOut(tel, v) { const k = telKey(tel), key = `customers/${k}.json`, c = await getJSON(key); if (!c) return null; c.optOut = !!v; await putJSON(key, c); return c; }
 // ---- listas de chamada (reativação)
 const LKEY = id => `lists/${id}.json`;
 const getList = id => /^[a-f0-9]{12}$/.test(String(id)) ? getJSON(LKEY(id)) : null;
 const saveList = l => { l.atualizadoEm = new Date().toISOString(); return putJSON(LKEY(l.id), l); };
 async function allLists() { return (await mapLimit(await listKeys('lists/'), 25, b => getJSON(b.pathname))).filter(Boolean).sort((a, b) => b.criadoEm.localeCompare(a.criadoEm)); }
-const { del } = require('@vercel/blob');
 const delList = id => del(LKEY(id));
 const getCustomer = tel => { const k = telKey(tel); return k ? getJSON(`customers/${k}.json`) : null; };
 // ---- cardápio editado no painel + fotos (privadas no Blob, servidas por /api/img)
@@ -62,4 +67,4 @@ async function putImage(key, buf) { await put(key, buf, { access: 'private', con
 async function getImage(key) { const r = await get(key, { access: 'private' }).catch(e => { if (e.name === 'BlobNotFoundError') return null; throw e; }); return r && r.stream ? Buffer.from(await new Response(r.stream).arrayBuffer()) : null; }
 const delBlob = key => del(key);
 async function loadMenuInto(P) { const [m, s] = await Promise.all([getMenu(), getSettings()]); P.applyMenu(m, s.pastelAdds); return m; }
-module.exports = { getMenu, saveMenu, putImage, getImage, delBlob, loadMenuInto, getJSON, putJSON, getCustomer, setOptOut, getList, saveList, allLists, delList, getChat, saveChat, listChats, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings, telKey };
+module.exports = { bump, getRevs, delChat, getMenu, saveMenu, putImage, getImage, delBlob, loadMenuInto, getJSON, putJSON, getCustomer, setOptOut, getList, saveList, allLists, delList, getChat, saveChat, listChats, saveOrder, getOrder, listOrders, touchCustomer, listCustomers, getSettings, saveSettings, telKey };

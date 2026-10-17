@@ -65,7 +65,7 @@ if(o.pixErro)toast("Pix automático indisponível: combine o Pix pelo WhatsApp")
 if(o.pagamento=="Pix"&&o.pix){view("vPix");$("#pixAmount").textContent=brlFmt(o.total);$("#pixQr").src="data:image/png;base64,"+o.pix.qr_code_base64;$("#pixCode").value=o.pix.qr_code;$("#pixStatus").textContent="Aguardando pagamento…";$("#pixStatus").classList.remove("ok");
 clearInterval(poll);poll=setInterval(async()=>{try{const s=await(await fetch(api+"/api/pedido?id="+o.id)).json();
 if(s.pago){clearInterval(poll);$("#pixStatus").textContent="✅ Pagamento confirmado!";$("#pixStatus").classList.add("ok");setTimeout(()=>showDone(s,true),1200)}
-else if(["rejected","cancelled","expired"].includes(s.pixStatus)){clearInterval(poll);$("#pixStatus").textContent="Pagamento não concluído ("+s.pixStatus+"). Faça um novo pedido."}}catch(e){}},4000)}
+else if(["rejected","cancelled","expired"].includes(s.pixStatus)){clearInterval(poll);$("#pixStatus").textContent="Pagamento não concluído ("+s.pixStatus+"). Faça um novo pedido."}}catch(e){}},5000)}
 else showDone(o,false)}
 catch(e){if(/^Endere\u00e7o salvo n\u00e3o encontrado|^Endereço salvo não encontrado/.test(e.message)&&window.meRefFail){meRefFail(draft.cliente);view("vCart");toast("Confirme rua e número para continuar")}else toast(e.message)}finally{btn.disabled=false;btn.textContent="Confirmar pedido"}};
 function showDone(o,paid){const t=orderText(o,o.id?trackURL(o.id):"");view("vDone");$("#doneTitle").textContent=paid?"✅ Pagamento confirmado!":"✅ Pedido recebido!";$("#sumText").value=t;

@@ -4,7 +4,7 @@
 .steps{list-style:none;padding:0;margin:0}.steps li{padding:8px 0 8px 30px;position:relative;color:#666}.steps li:before{content:"○";position:absolute;left:4px}
 .steps li.done{color:#fff}.steps li.done:before{content:"●";color:#f5b400}.steps li.cur{color:#f5b400;font-weight:800}.big{font-size:22px;font-weight:800;color:#f5b400}.paid{color:#3c3;font-weight:800}</style></head><body>
 <header><a href="./"><img src="img/logo.jpg" alt="Bravo" class="logo"></a></header>
-<div class="wrap"><h2>Acompanhe seu pedido</h2><div id="out" class="box">Carregando…</div><small style="color:#777">Atualiza automaticamente a cada 10 segundos.</small><a class="ghost" href="./">Voltar à loja</a></div>
+<div class="wrap"><h2>Acompanhe seu pedido</h2><div id="out" class="box">Carregando…</div><small style="color:#777">Atualiza automaticamente a cada 20 segundos.</small><a class="ghost" href="./">Voltar à loja</a></div>
 <script src="products.js?v=20261014150237"></script><script src="app-config.js?v=20261014150237"></script><script>
 const $=s=>document.querySelector(s),id=new URLSearchParams(location.search).get("id")||"";
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -17,5 +17,5 @@ $("#out").innerHTML=`<p>Pedido nº <b>${esc(o.id)}</b></p><p class="big">${esc(o
 <p class="cust">${o.cliente.tipo=="Retirada"?"Retirada no local":"Entrega: "+esc(o.cliente.end)}<br>Pagamento: ${esc(o.pagamento)}</p>`;
 const cp=$("#cp");if(cp)cp.onclick=e=>{e.preventDefault();navigator.clipboard?.writeText(o.pix.qr_code);cp.textContent="Copiado!"};
 if(["Entregue","Cancelado"].includes(o.status))clearInterval(t)}catch(e){$("#out").textContent=e.message||"Pedido não encontrado"}}
-const t=setInterval(load,10000);load();
+const t=setInterval(()=>{if(!document.hidden)load()},20000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});load();
 </script><script src="chat.js?v=20261014150237"></script></body></html>

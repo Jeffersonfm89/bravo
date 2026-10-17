@@ -95,7 +95,7 @@
   if (bar) bar.insertBefore(box, q("#optPaper") ? q("#optPaper").closest("label") : null);
   var chk = q("#optThermal"); chk.checked = LS.getItem(KEY_ON) !== "0";
   chk.onchange = function () { LS.setItem(KEY_ON, chk.checked ? "1" : "0"); };
-  function setStatus(on) { var s = q("#prState"); if (s) { s.textContent = "Impressora: " + (on ? "conectada ✅" : "não conectada"); s.style.color = on ? "#25d366" : ""; } }
+  function setStatus(on) { window.bravoPrinterOnline = !!on; var s = q("#prState"); if (s) { s.textContent = "Impressora: " + (on ? "conectada ✅" : "não conectada"); s.style.color = on ? "#25d366" : ""; } }
   function check() { return req("/status", null, 2500).then(function () { setStatus(true); return true; }, function () { setStatus(false); return false; }); }
   q("#prTest").onclick = function () { req("/print", { id: "teste", text: "BRAVO - teste de impressora\n" + new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) + "\nSe saiu este papel, esta tudo certo!" }, 8000)
     .then(function () { setStatus(true); notice("🖨️ Teste enviado para a impressora", true); }, function () { offline(true); }); };
@@ -115,7 +115,7 @@
   function acceptedAt(o) { var h = (o.historico || []).filter(function (x) { return x.status === "Aceito"; }).pop(); return h ? new Date(h.em).getTime() : 0; }
   // aceitou neste aparelho: imprime na hora
   window.bravoOnAccepted = function (o) { autoPrint(o); };
-  // aceitou em outro aparelho (ex.: celular): o PC com o painel aberto imprime na próxima atualização (até 20 min depois)
+  // aceitou em outro aparelho (ex.: celular): o PC com o painel aberto imprime na próxima atualização (em até ~30s; pedidos aceitos há até 20 min)
   window.bravoCheckAccepted = function (orders) {
     (orders || []).forEach(function (o) { if (["Aceito", "Em produção"].indexOf(o.status) < 0) return; var a = acceptedAt(o); if (a && Date.now() - a < WINDOW_MS) autoPrint(o); });
   };

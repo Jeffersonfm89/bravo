@@ -40,7 +40,7 @@
     var ins = document.querySelectorAll(".mf [data-g]"); if (ins.length) { body.choices = {}; ins.forEach(function (i) { (body.choices[i.dataset.g] = body.choices[i.dataset.g] || {})[i.dataset.c] = i.value; }); }
     b.disabled = true; b.textContent = "Salvando…";
     try { if (newImg) { b.textContent = "Enviando foto…"; body.img = (await call({ action: "menuImg", data: newImg })).img; }
-      await call(body); await loadCard(); alert("Salvo! Já aparece na loja.");
+      await call(body); await loadCard(); alert("Salvo! Aparece na loja em até 2 minutos.");
     } catch (e) { alert(e.message.replace(/^Erro ao carregar: /, "")); b.disabled = false; b.textContent = "Salvar"; }
   }
   document.addEventListener("click", async function (e) {
