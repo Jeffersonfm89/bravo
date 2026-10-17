@@ -17,7 +17,7 @@ footer{text-align:center;color:#777;padding:20px;font-size:13px}
 .tot{font-size:18px;text-align:right;padding:12px 0}#checkout,#summary{display:flex;flex-direction:column;gap:8px}
 input,select,textarea{background:#1c1c1c;color:#fff;border:1px solid #333;border-radius:10px;padding:11px;font-size:16px}textarea{min-height:70px}#sumText{min-height:220px}
 .r{font-size:15px}.go{background:#f5b400;color:#000;border:0;border-radius:12px;padding:14px;font-weight:800;font-size:16px}
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#f5b400;color:#000;padding:10px 18px;border-radius:20px;font-weight:700;opacity:0;transition:.3s;z-index:20}#toast.s{opacity:1}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#f5b400;color:#000;padding:10px 18px;border-radius:20px;font-weight:700;opacity:0;transition:.3s;z-index:20;pointer-events:none;visibility:hidden}#toast.s{opacity:1;visibility:visible}
 
 #pix{display:flex;flex-direction:column;gap:8px}#pix[hidden]{display:none}#pixQr{width:240px;max-width:100%;align-self:center;background:#fff;border-radius:10px;padding:8px}#pixStatus{font-weight:700;color:#f5b400;text-align:center}#pixStatus.ok{color:#3c3;font-size:20px}
 .view{display:flex;flex-direction:column;gap:8px}.view[hidden]{display:none}
@@ -26,6 +26,7 @@ input,select,textarea{background:#1c1c1c;color:#fff;border:1px solid #333;border
 .cust{font-size:14px;color:#ccc;line-height:1.5}details{margin-top:6px}summary{color:#aaa}
 
 .modal{position:fixed;inset:0;background:#000b;z-index:15;display:flex;align-items:flex-end;justify-content:center}.modal[hidden]{display:none}
+#mAdd{position:sticky;bottom:0;flex-shrink:0;box-shadow:0 -10px 14px #141414}
 .mbox{background:#141414;width:min(480px,100%);max-height:90vh;overflow-y:auto;border-radius:18px 18px 0 0;padding:14px;display:flex;flex-direction:column;gap:10px}
 fieldset{border:1px solid #2a2a2a;border-radius:12px;padding:8px 10px}legend{color:#f5b400;font-weight:700;padding:0 4px}
 .opt{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid #222;font-size:15px}.opt:last-child{border:0}.opt span{flex:1}.opt input{width:20px;height:20px;accent-color:#f5b400}
