@@ -41,8 +41,8 @@ var PRODUCTS = [
   { id: "h-x-costela", cat: "Hambúrgueres", name: "X Costela", desc: "Hambúrguer artesanal de costela 200g, alface, tomate, pickles, maionese da casa, queijo mussarela e batata palha. Acompanha 50g de batata frita", price: 18.00, img: "img/h-x-costela.jpg", nota: true,
     options: [semGroup(["Alface", "Tomate", "Pickles", "Maionese da casa", "Batata palha"])] },
   // X Tradicional: R$ 13,00 (queijo mussarela fixo)
-  { id: "h-x-tradicional", cat: "Hambúrgueres", name: "X Tradicional", desc: "Hambúrguer, alface, tomate, queijo mussarela e batata palha", price: 13.00, img: "img/h-x-tradicional.jpg", nota: true,
-    options: [semGroup(["Alface", "Tomate", "Queijo mussarela", "Batata palha"])] },
+  { id: "h-x-tradicional", cat: "Hambúrgueres", name: "X Tradicional", desc: "Hambúrguer, alface, tomate, queijo mussarela, ervilha, milho e batata palha", price: 13.00, img: "img/h-x-tradicional.jpg", nota: true,
+    options: [semGroup(["Alface", "Tomate", "Queijo mussarela", "Ervilha", "Milho", "Batata palha"])] },
   // X Bacon / X Frango / X Calabresa: PREÇO PENDENTE -> ativo:false (escondidos). Para liberar: definir preço e marcar "Disponível" no painel.
   { id: "h-x-bacon", cat: "Hambúrgueres", name: "X Bacon", desc: "Hambúrguer, alface, tomate, queijo mussarela, bacon e batata palha", price: 0, ativo: false, img: "img/h-x-tradicional.jpg", nota: true,
     options: [semGroup(["Alface", "Tomate", "Queijo mussarela", "Batata palha"])] },
