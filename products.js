@@ -8,6 +8,8 @@ var PASTEL_ADDS = [
   { id: "calabresa", name: "Calabresa", price: 8.00 }, { id: "queijo", name: "Queijo", price: 8.00 }, { id: "bacon", name: "Bacon", price: 8.00 },
   { id: "pizza", name: "Pizza (tomate, mussarela, presunto, orégano)", price: 8.00 }, { id: "frango", name: "Frango", price: 8.00 } ];
 function addsGroup() { return { id: "add", padds: true, label: "Adicionais", type: "multi", min: 0, max: PASTEL_ADDS.length, choices: PASTEL_ADDS }; }
+// Adicionais dos hambúrgueres: mesmos itens/preços dos adicionais de pastel (padds = segue o preço do painel)
+function burgerAdds() { var ch = PASTEL_ADDS.filter(function (a) { return ["calabresa", "bacon", "frango"].indexOf(a.id) >= 0; }); return { id: "add", padds: true, label: "Adicionais", type: "multi", min: 0, max: ch.length, choices: ch }; }
 function semGroup(ings) { return { id: "sem", label: "Tirar algo", type: "multi", min: 0, max: ings.length, choices: ings.map(function (n) { return { id: n.toLowerCase().normalize("NFD").replace(/[^a-z]/g, ""), name: "Sem " + n, price: 0 }; }) }; }
 // ings = ingredientes do próprio pastel (viram as opções de "Tirar algo")
 // Tamanho do pastel (obrigatório): G = preço informado, M = G − R$ 5. O preço base fica 0.
@@ -37,22 +39,22 @@ var PRODUCTS = [
       { id: "tomate", name: "Tomate", price: 0 }, { id: "oregano", name: "Orégano", price: 0 }, { id: "milho", name: "Milho", price: 0 } ] }, addsGroup()] },
   // ===== HAMBÚRGUERES ===== (tamanho único; "Tirar algo" + observação como nos pastéis)
   { id: "h-x-simples", cat: "Hambúrgueres", name: "X Simples", desc: "Pão, hambúrguer, alface, tomate, queijo cheddar e maionese da casa", price: 4.99, img: "img/h-x-simples.jpg", nota: true,
-    options: [semGroup(["Alface", "Tomate", "Queijo cheddar", "Maionese da casa"])] },
+    options: [semGroup(["Alface", "Tomate", "Queijo cheddar", "Maionese da casa"]), burgerAdds()] },
   { id: "h-x-costela", cat: "Hambúrgueres", name: "X Costela", desc: "Hambúrguer artesanal de costela 200g, alface, tomate, pickles, maionese da casa, queijo mussarela e batata palha. Acompanha 50g de batata frita", price: 18.00, img: "img/h-x-costela.jpg", nota: true,
-    options: [semGroup(["Alface", "Tomate", "Pickles", "Maionese da casa", "Batata palha"])] },
+    options: [semGroup(["Alface", "Tomate", "Pickles", "Maionese da casa", "Batata palha"]), burgerAdds()] },
   // X Tradicional: R$ 13,00 (queijo mussarela fixo)
   { id: "h-x-tradicional", cat: "Hambúrgueres", name: "X Tradicional", desc: "Hambúrguer, alface, tomate, queijo mussarela, ervilha, milho e batata palha", price: 13.00, img: "img/h-x-tradicional.jpg", nota: true,
-    options: [semGroup(["Alface", "Tomate", "Queijo mussarela", "Ervilha", "Milho", "Batata palha"])] },
+    options: [semGroup(["Alface", "Tomate", "Queijo mussarela", "Ervilha", "Milho", "Batata palha"]), burgerAdds()] },
   // X Bacon / X Frango / X Calabresa: PREÇO PENDENTE -> ativo:false (escondidos). Para liberar: definir preço e marcar "Disponível" no painel.
   { id: "h-x-bacon", cat: "Hambúrgueres", name: "X Bacon", desc: "Hambúrguer, alface, tomate, queijo mussarela, bacon e batata palha", price: 0, ativo: false, img: "img/h-x-tradicional.jpg", nota: true,
-    options: [semGroup(["Alface", "Tomate", "Queijo mussarela", "Batata palha"])] },
+    options: [semGroup(["Alface", "Tomate", "Queijo mussarela", "Batata palha"]), burgerAdds()] },
   { id: "h-x-frango", cat: "Hambúrgueres", name: "X Frango", desc: "Hambúrguer, alface, tomate, queijo mussarela, frango e batata palha", price: 0, ativo: false, img: "img/h-x-tradicional.jpg", nota: true,
-    options: [semGroup(["Alface", "Tomate", "Queijo mussarela", "Batata palha"])] },
+    options: [semGroup(["Alface", "Tomate", "Queijo mussarela", "Batata palha"]), burgerAdds()] },
   { id: "h-x-calabresa", cat: "Hambúrgueres", name: "X Calabresa", desc: "Hambúrguer, alface, tomate, queijo mussarela, calabresa e batata palha", price: 0, ativo: false, img: "img/h-x-tradicional.jpg", nota: true,
-    options: [semGroup(["Alface", "Tomate", "Queijo mussarela", "Batata palha"])] },
+    options: [semGroup(["Alface", "Tomate", "Queijo mussarela", "Batata palha"]), burgerAdds()] },
   // X Pizza: R$ 14,99 (batata palha a confirmar)
   { id: "h-x-pizza", cat: "Hambúrgueres", name: "X Pizza", desc: "Hambúrguer, tomate, bastante queijo mussarela, orégano e catupiry", price: 14.99, img: "img/h-x-tradicional.jpg", nota: true,
-    options: [semGroup(["Tomate", "Orégano", "Catupiry"])] },
+    options: [semGroup(["Tomate", "Orégano", "Catupiry"]), burgerAdds()] },
   { id: "a-copo", cat: "Açaí", name: "Açaí no Copo",
     desc: "Escolha o tamanho e os adicionais", price: 0, img: "img/acai.jpg",
     options: [
