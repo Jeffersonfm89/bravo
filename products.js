@@ -50,8 +50,8 @@ var PRODUCTS = [
     options: [semGroup(["Alface", "Tomate", "Queijo mussarela", "Batata palha"])] },
   { id: "h-x-calabresa", cat: "Hambúrgueres", name: "X Calabresa", desc: "Hambúrguer, alface, tomate, queijo mussarela, calabresa e batata palha", price: 0, ativo: false, img: "img/h-x-tradicional.jpg", nota: true,
     options: [semGroup(["Alface", "Tomate", "Queijo mussarela", "Batata palha"])] },
-  // X Pizza: PREÇO PENDENTE -> ativo:false (batata palha a confirmar)
-  { id: "h-x-pizza", cat: "Hambúrgueres", name: "X Pizza", desc: "Hambúrguer, tomate, bastante queijo mussarela, orégano e catupiry", price: 0, ativo: false, img: "img/h-x-tradicional.jpg", nota: true,
+  // X Pizza: R$ 14,99 (batata palha a confirmar)
+  { id: "h-x-pizza", cat: "Hambúrgueres", name: "X Pizza", desc: "Hambúrguer, tomate, bastante queijo mussarela, orégano e catupiry", price: 14.99, img: "img/h-x-tradicional.jpg", nota: true,
     options: [semGroup(["Tomate", "Orégano", "Catupiry"])] },
   { id: "a-copo", cat: "Açaí", name: "Açaí no Copo",
     desc: "Escolha o tamanho e os adicionais", price: 0, img: "img/acai.jpg",
