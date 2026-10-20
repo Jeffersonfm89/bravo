@@ -41,9 +41,19 @@ var PRODUCTS = [
   { id: "h-x-costela", cat: "Hambúrgueres", name: "X Costela", desc: "Hambúrguer artesanal de costela 200g, alface, tomate, pickles, maionese da casa, queijo (cheddar ou mussarela) e batata palha. Acompanha 50g de batata frita", price: 18.00, img: "img/h-x-costela.jpg", nota: true,
     options: [{ id: "queijo", label: "Queijo", type: "single", min: 1, max: 1, choices: [{ id: "cheddar", name: "Cheddar", price: 0 }, { id: "mussarela", name: "Mussarela", price: 0 }] },
       semGroup(["Alface", "Tomate", "Pickles", "Maionese da casa", "Batata palha"])] },
-  // X Tradicional: R$ 13,00 (sabor obrigatório)
-  { id: "h-x-tradicional", cat: "Hambúrgueres", name: "X Tradicional", desc: "Hambúrguer, alface, tomate, queijo e batata palha. Escolha: bacon, calabresa ou frango", price: 13.00, img: "img/h-x-tradicional.jpg", nota: true,
-    options: [{ id: "sabor", label: "Escolha o sabor", type: "single", min: 1, max: 1, choices: [{ id: "bacon", name: "Bacon", price: 0 }, { id: "calabresa", name: "Calabresa", price: 0 }, { id: "frango", name: "Frango", price: 0 }] },
+  // X Tradicional: R$ 13,00, sem sabor; escolha de queijo obrigatória
+  { id: "h-x-tradicional", cat: "Hambúrgueres", name: "X Tradicional", desc: "Hambúrguer, alface, tomate, queijo (mussarela ou cheddar) e batata palha", price: 13.00, img: "img/h-x-tradicional.jpg", nota: true,
+    options: [{ id: "queijo", label: "Queijo", type: "single", min: 1, max: 1, choices: [{ id: "mussarela", name: "Mussarela", price: 0 }, { id: "cheddar", name: "Cheddar", price: 0 }] },
+      semGroup(["Alface", "Tomate", "Queijo", "Batata palha"])] },
+  // X Bacon / X Frango / X Calabresa: PREÇO PENDENTE -> ativo:false (escondidos). Para liberar: definir preço e marcar "Disponível" no painel.
+  { id: "h-x-bacon", cat: "Hambúrgueres", name: "X Bacon", desc: "Hambúrguer, alface, tomate, queijo (mussarela ou cheddar), bacon e batata palha", price: 0, ativo: false, img: "img/h-x-tradicional.jpg", nota: true,
+    options: [{ id: "queijo", label: "Queijo", type: "single", min: 1, max: 1, choices: [{ id: "mussarela", name: "Mussarela", price: 0 }, { id: "cheddar", name: "Cheddar", price: 0 }] },
+      semGroup(["Alface", "Tomate", "Queijo", "Batata palha"])] },
+  { id: "h-x-frango", cat: "Hambúrgueres", name: "X Frango", desc: "Hambúrguer, alface, tomate, queijo (mussarela ou cheddar), frango e batata palha", price: 0, ativo: false, img: "img/h-x-tradicional.jpg", nota: true,
+    options: [{ id: "queijo", label: "Queijo", type: "single", min: 1, max: 1, choices: [{ id: "mussarela", name: "Mussarela", price: 0 }, { id: "cheddar", name: "Cheddar", price: 0 }] },
+      semGroup(["Alface", "Tomate", "Queijo", "Batata palha"])] },
+  { id: "h-x-calabresa", cat: "Hambúrgueres", name: "X Calabresa", desc: "Hambúrguer, alface, tomate, queijo (mussarela ou cheddar), calabresa e batata palha", price: 0, ativo: false, img: "img/h-x-tradicional.jpg", nota: true,
+    options: [{ id: "queijo", label: "Queijo", type: "single", min: 1, max: 1, choices: [{ id: "mussarela", name: "Mussarela", price: 0 }, { id: "cheddar", name: "Cheddar", price: 0 }] },
       semGroup(["Alface", "Tomate", "Queijo", "Batata palha"])] },
   { id: "a-copo", cat: "Açaí", name: "Açaí no Copo",
     desc: "Escolha o tamanho e os adicionais", price: 0, img: "img/acai.jpg",
