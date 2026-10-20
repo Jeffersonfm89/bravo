@@ -35,6 +35,16 @@ var PRODUCTS = [
       { id: "mussarela", name: "Queijo mussarela", price: 0 }, { id: "presunto", name: "Presunto", price: 0 }, { id: "calabresa", name: "Calabresa", price: 0 },
       { id: "bacon", name: "Bacon", price: 0 }, { id: "catupiry", name: "Catupiry", price: 0 }, { id: "requeijao", name: "Requeijão", price: 0 },
       { id: "tomate", name: "Tomate", price: 0 }, { id: "oregano", name: "Orégano", price: 0 }, { id: "milho", name: "Milho", price: 0 } ] }, addsGroup()] },
+  // ===== HAMBÚRGUERES ===== (tamanho único; "Tirar algo" + observação como nos pastéis)
+  { id: "h-x-simples", cat: "Hambúrgueres", name: "X Simples", desc: "Pão, hambúrguer 56g, alface, tomate, queijo cheddar e maionese da casa", price: 4.99, img: "img/h-x-simples.jpg", nota: true,
+    options: [semGroup(["Alface", "Tomate", "Queijo cheddar", "Maionese da casa"])] },
+  { id: "h-x-costela", cat: "Hambúrgueres", name: "X Costela", desc: "Hambúrguer de costela 200g, alface, tomate, pickles, maionese da casa, queijo (cheddar ou mussarela) e batata palha. Acompanha 50g de batata frita", price: 18.00, img: "img/h-x-costela.jpg", nota: true,
+    options: [{ id: "queijo", label: "Queijo", type: "single", min: 1, max: 1, choices: [{ id: "cheddar", name: "Cheddar", price: 0 }, { id: "mussarela", name: "Mussarela", price: 0 }] },
+      semGroup(["Alface", "Tomate", "Pickles", "Maionese da casa", "Batata palha"])] },
+  // X Tradicional: PREÇO AINDA NÃO DEFINIDO -> ativo:false (escondido da loja e recusado no servidor). Para liberar: no painel (Cardápio) defina o preço e marque "Disponível".
+  { id: "h-x-tradicional", cat: "Hambúrgueres", name: "X Tradicional", desc: "Hambúrguer, alface, tomate, queijo e batata palha. Escolha: bacon, calabresa ou frango", price: 0, ativo: false, img: "img/h-x-tradicional.jpg", nota: true,
+    options: [{ id: "sabor", label: "Escolha o sabor", type: "single", min: 1, max: 1, choices: [{ id: "bacon", name: "Bacon", price: 0 }, { id: "calabresa", name: "Calabresa", price: 0 }, { id: "frango", name: "Frango", price: 0 }] },
+      semGroup(["Alface", "Tomate", "Queijo", "Batata palha"])] },
   { id: "a-copo", cat: "Açaí", name: "Açaí no Copo",
     desc: "Escolha o tamanho e os adicionais", price: 0, img: "img/acai.jpg",
     options: [
@@ -48,7 +58,7 @@ var PRODUCTS = [
   { id: "b-coca-2l", cat: "Bebidas", name: "Coca-Cola 2L", desc: "Gelada", price: 16.00, img: "img/b-coca-2l.jpg" },
 ];
 var DEFAULT_PRODUCTS = JSON.parse(JSON.stringify(PRODUCTS));
-var CATS_ORDER = ["Pastéis", "Açaí", "Bebidas"];
+var CATS_ORDER = ["Pastéis", "Hambúrgueres", "Açaí", "Bebidas"];
 /* Cardápio salvo no painel: { overrides: { id: {name,cat,price,desc,img,ativo,choices:{grupo:{opção:preço}}} }, custom: [produtos novos] }.
    Recria PRODUCTS (no lugar, mesma array) a partir dos padrões + alterações. Usado no servidor (preço do pedido) e no painel. */
 function applyMenu(menu, pastelAdds) {
