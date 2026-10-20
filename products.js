@@ -36,9 +36,9 @@ var PRODUCTS = [
       { id: "bacon", name: "Bacon", price: 0 }, { id: "catupiry", name: "Catupiry", price: 0 }, { id: "requeijao", name: "Requeijão", price: 0 },
       { id: "tomate", name: "Tomate", price: 0 }, { id: "oregano", name: "Orégano", price: 0 }, { id: "milho", name: "Milho", price: 0 } ] }, addsGroup()] },
   // ===== HAMBÚRGUERES ===== (tamanho único; "Tirar algo" + observação como nos pastéis)
-  { id: "h-x-simples", cat: "Hambúrgueres", name: "X Simples", desc: "Pão, hambúrguer 56g, alface, tomate, queijo cheddar e maionese da casa", price: 4.99, img: "img/h-x-simples.jpg", nota: true,
+  { id: "h-x-simples", cat: "Hambúrgueres", name: "X Simples", desc: "Pão, hambúrguer, alface, tomate, queijo cheddar e maionese da casa", price: 4.99, img: "img/h-x-simples.jpg", nota: true,
     options: [semGroup(["Alface", "Tomate", "Queijo cheddar", "Maionese da casa"])] },
-  { id: "h-x-costela", cat: "Hambúrgueres", name: "X Costela", desc: "Hambúrguer de costela 200g, alface, tomate, pickles, maionese da casa, queijo (cheddar ou mussarela) e batata palha. Acompanha 50g de batata frita", price: 18.00, img: "img/h-x-costela.jpg", nota: true,
+  { id: "h-x-costela", cat: "Hambúrgueres", name: "X Costela", desc: "Hambúrguer artesanal de costela 200g, alface, tomate, pickles, maionese da casa, queijo (cheddar ou mussarela) e batata palha. Acompanha 50g de batata frita", price: 18.00, img: "img/h-x-costela.jpg", nota: true,
     options: [{ id: "queijo", label: "Queijo", type: "single", min: 1, max: 1, choices: [{ id: "cheddar", name: "Cheddar", price: 0 }, { id: "mussarela", name: "Mussarela", price: 0 }] },
       semGroup(["Alface", "Tomate", "Pickles", "Maionese da casa", "Batata palha"])] },
   // X Tradicional: R$ 13,00 (sabor obrigatório)
